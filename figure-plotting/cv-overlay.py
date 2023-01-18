@@ -25,7 +25,7 @@ def make_plot():
     fc_ev = -4.9
 
     # creating plot
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(dpi=300)
     cv_count = 0
     for file in file_list:
         if file.endswith('.csv'):
@@ -43,7 +43,9 @@ def make_plot():
 
     ax2 = ax.secondary_xaxis("top", functions=(lambda x: (x-fc_ev)*-1, lambda x: (x+fc_ev)*-1))
     ax2.minorticks_on()
-    ax2.set_xlabel("Energy vs. Vacuum (eV)")    
+    ax2.set_xlabel("Energy vs. Vacuum (eV)")
+    plt.tight_layout()   
+    # plt.savefig(r'dir')
     plt.show()
 
 
