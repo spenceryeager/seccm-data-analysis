@@ -7,6 +7,10 @@ def main():
 
 
 def display_plot():
+    # Setting font size before making plot
+    font = {'size': 12}
+    plt.rc('font', **font)
+
     fc_redox_correction = 0.5
 
     # Data loading
@@ -20,7 +24,7 @@ def display_plot():
     i = 'Current (pA)'
 
     # Plotting
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5, 4))
     ax.plot(initial_data[v], initial_data[i] * -1, 
             color='red', 
             label='Initial Scan')
@@ -40,6 +44,9 @@ def display_plot():
     ax.invert_xaxis()
     ax.minorticks_on()
     ax.legend()
+
+    # display
+    plt.tight_layout()
     plt.show()
 
 
