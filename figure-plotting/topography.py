@@ -22,12 +22,13 @@ def make_topography():
     x_grid, y_grid = make_grid(x_vals, y_vals)
     
     fig, ax = plt.subplots()
-    ax.pcolormesh(x_grid, y_grid, Z)
+    im = ax.pcolormesh(x_grid, y_grid, Z)
+
     # Graph properties
-    ax.set_xlabel('X (um)')
-    ax.set_ylabel('Y (um)')
-    cax = plt.axes(Z)
-    plt.colorbar(cax=cax)
+    ax.set_xlabel('X ($\\rm\mu$m)')
+    ax.set_ylabel('Y ($\\rm\mu$m)')
+    cb = fig.colorbar(im, ax=ax)
+    cb.set_label('Z Extension ($\\rm\mu$m)')
     plt.show()
 
 def make_grid(x_data, y_data):
