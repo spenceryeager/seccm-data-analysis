@@ -12,8 +12,37 @@ def main():
 def make_plot():
     dir_path = r"R:\Spencer Yeager\data\NiOx_Project\2023\01_Jan\30Jan2023_Juan-NiOx-400nm-tip\scan"
     data_list = file_sort(dir_path)
+    x_list = []
+    y_list = []
+    for filename in data_list:
+        split_name = filename.split("_")
+        x_list.append(int(split_name[0][:-1]))
+        y_list.append(int(split_name[1][:-1]))
 
-    # with sorted list, we must read each file and plot it. Have mercy on my computer memory
+    unique_x = list(set(x_list))
+    unique_y = list(set(y_list))
+    X, Y = np.meshgrid(unique_x, unique_y)
+
+    current_list = []
+    count = 0
+    for i in data_list:
+        if count == 0:
+            current_list.append(0)
+            count += 1
+        else:
+            data_path = os.path.join(dir_path, i)
+            data = pd.read_csv(data_path, sep='\t')
+            current_list.append(data['Current (pA)'][0])
+
+    # print(len(current_list))
+
+    xy_current = pd.DataFrame(list(zip(x_list, y_list, current_list)), columns = ['X', 'Y', 'Current (pA)'])
+    Z_current = xy_current.pivot_table(index="X", columns="Y", values="Current (pA)").T.values
+
+    fig, ax = plt.subplots()
+    im = ax.pcolormesh(X, Y, Z_current)
+    plt.show()
+
 
 
 def file_sort(dir_path):
