@@ -23,25 +23,39 @@ def make_plot():
     unique_y = list(set(y_list))
     X, Y = np.meshgrid(unique_x, unique_y)
 
-    current_list = []
-    count = 0
-    for i in data_list:
-        if count == 0:
-            current_list.append(0)
-            count += 1
-        else:
-            data_path = os.path.join(dir_path, i)
-            data = pd.read_csv(data_path, sep='\t')
-            current_list.append(data['Current (pA)'][0])
+    data_path = os.path.join(dir_path, data_list[1])
+    data = pd.read_csv(data_path, sep='\t')
+    index = len(data)
+    file_count = 0
+    while file_count <= index:
+        current_list = []
+        fileskip = 0
+        for i in data_list:
+            if fileskip == 0:
+                current_list.append(0)
+                fileskip += 1
+            else:
+                data_path = os.path.join(dir_path, i)
+                data = pd.read_csv(data_path, sep='\t')
+                current_list.append(data['Current (pA)'][file_count])
+                voltage = str(data['Voltage (V)'][file_count])
 
-    # print(len(current_list))
+        # print(len(current_list))
 
-    xy_current = pd.DataFrame(list(zip(x_list, y_list, current_list)), columns = ['X', 'Y', 'Current (pA)'])
-    Z_current = xy_current.pivot_table(index="X", columns="Y", values="Current (pA)").T.values
+        xy_current = pd.DataFrame(list(zip(x_list, y_list, current_list)), columns = ['X', 'Y', 'Current (pA)'])
+        Z_current = xy_current.pivot_table(index="X", columns="Y", values="Current (pA)").T.values
 
-    fig, ax = plt.subplots()
-    im = ax.pcolormesh(X, Y, Z_current)
-    plt.show()
+        fig, ax = plt.subplots()
+        im = ax.pcolormesh(X, Y, Z_current, vmin=-120, vmax=100)
+        ax.set_xlabel('X ($\\rm\mu$m)')
+        ax.set_ylabel('Y ($\\rm\mu$m)')
+        ax.set_title(voltage)
+        cb = fig.colorbar(im, ax=ax)
+        cb.set_label('Current (pA)')
+        savepath = r"C:\Users\spenceryeager\Documents\group_meetings\8Feb2023\400nm-tip\video"
+        savename = str(file_count) + ".png"
+        plt.savefig(os.path.join(savepath, savename))
+        file_count += 100
 
 
 
