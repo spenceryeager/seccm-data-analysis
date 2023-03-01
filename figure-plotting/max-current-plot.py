@@ -10,9 +10,27 @@ def main():
 
 
 def get_currents():
-    working_directory = r"D:\Research\SPECS-Project\2023\15Feb2023_rrP3HT_500nm-tip\scan"
+    working_directory = r"dir"
     dir_list = file_sort(working_directory)
-    get_voltage(os.path.join(working_directory, dir_list[0]))
+    current_list = []
+
+    for path in dir_list:
+        current = get_voltage(os.path.join(working_directory, path))
+        current_list.append(current)
+    
+    make_plot(current_list)
+
+
+def make_plot(current_list):
+    font = {'size': 14}
+    plt.rc('font', **font)
+    sample_size = len(current_list)
+    bin_count = int(np.ceil(np.log2(sample_size)) + 1)
+    fig, ax = plt.subplots(tight_layout=True)
+    ax.hist(current_list, bin_count, edgecolor='black', color='firebrick')
+    ax.set_xlabel('Oxidative Current (pA)')
+    ax.set_ylabel('Counts')
+    plt.show()
 
 
 def file_sort(dir_path):
@@ -28,13 +46,21 @@ def file_sort(dir_path):
 
 
 def get_voltage(filepath):
+    get_oxidation = True
     data = pd.read_csv(filepath, sep='\t')
     data_length = len(data)
     scans = int(data_length / 3)
-    fig, ax = plt.subplots()
-    ax.plot(data['Voltage (V)'][scans:], data['Current (pA)'][scans:]*-1)
-    ax.invert_xaxis()
-    plt.show()
+    # uncomment to get a plot to figure out what points to analyze
+    # fig, ax = plt.subplots()
+    # ax.plot(data['Voltage (V)'][scans:], data['Current (pA)'][scans:]*-1)
+    # ax.invert_xaxis()
+    # plt.show()
+    V1 = 1.038 # V
+    V2 = 0.760 # V
+    subset = data[(scans + int(scans/2)):(scans + 2*int(scans/2))]
+    val = -1 * subset.loc[subset['Voltage (V)'] == V2, 'Current (pA)'].iloc[0]
+    return val
+    
 
 if __name__ == "__main__":
     main()
