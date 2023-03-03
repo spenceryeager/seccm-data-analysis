@@ -72,8 +72,13 @@ def get_voltage(filepath):
     # ax.invert_xaxis()
     # plt.show()
     V1 = 1.038 # V
-    V2 = 0.760 # V
-    subset = data[(scans + int(scans/2)):(scans + 2*int(scans/2))]
+    scan_numb = 2
+    reduction_scan_start = scan_numb*scans # or multiples of scan
+    reduction_scan_end = scan_numb*scans + int(scans/2) # or multiples of scan
+    oxidation_scan_start = int((scan_numb * scans)) + int(scans/2) #or multiples of scan
+    oxidation_scan_end = int((scan_numb * scans) + scans) # or multiples of scan
+
+    subset = data[reduction_scan_start:reduction_scan_end]
     val = -1 * subset.loc[subset['Voltage (V)'] == V2, 'Current (pA)'].iloc[0]
     return val
     
