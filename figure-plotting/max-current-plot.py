@@ -10,7 +10,7 @@ def main():
 
 
 def get_currents():
-    working_directory = r"dir"
+    working_directory = r'dir'
     dir_list = file_sort(working_directory)
     current_list = []
 
@@ -28,7 +28,7 @@ def make_plot(current_list):
     bin_count = int(np.ceil(np.log2(sample_size)) + 1)
     fig, ax = plt.subplots(tight_layout=True)
     ax.hist(current_list, bin_count, edgecolor='black', color='firebrick')
-    ax.set_xlabel('Oxidative Current (pA)')
+    ax.set_xlabel('Anodic Current (pA)')
     ax.set_ylabel('Counts')
     plt.show()
 
@@ -55,10 +55,15 @@ def get_voltage(filepath):
     # ax.plot(data['Voltage (V)'][scans:], data['Current (pA)'][scans:]*-1)
     # ax.invert_xaxis()
     # plt.show()
-    V1 = 1.038 # V
-    V2 = 0.760 # V
-    subset = data[(scans + int(scans/2)):(scans + 2*int(scans/2))]
-    val = -1 * subset.loc[subset['Voltage (V)'] == V2, 'Current (pA)'].iloc[0]
+    V1 = 0.875 # V
+    scan_numb = 2
+    reduction_scan_start = scan_numb*scans # or multiples of scan
+    reduction_scan_end = scan_numb*scans + int(scans/2) # or multiples of scan
+    oxidation_scan_start = int((scan_numb * scans)) + int(scans/2) #or multiples of scan
+    oxidation_scan_end = int((scan_numb * scans) + scans) # or multiples of scan
+    subset = data[oxidation_scan_start:oxidation_scan_end]
+    # print(subset)
+    val = -1 * subset.loc[subset['Voltage (V)'] == V1, 'Current (pA)'].iloc[0]
     return val
     
 
