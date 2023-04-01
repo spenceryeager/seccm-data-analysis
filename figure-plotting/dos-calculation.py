@@ -84,6 +84,7 @@ def ox_subset(sweeps, datafile, start_index):
     ox_start = sweep_segments + int(sweep_segments/2)
     ox_end = sweep_segments*2
     datafile = datafile[ox_start:ox_end]
+    print(datafile)
     datafile = datafile[start_index:].reset_index(drop=True)
     return datafile
 
