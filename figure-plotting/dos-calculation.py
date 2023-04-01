@@ -15,20 +15,14 @@ def main():
     # fill this section out beforehand
     fc_correction = 0 # how much do we need to adjust the potential based on Fc redox potential?
     sweeps = 3 # how many sweeps are there? this helps with determining sweep cutoffs
-    pipette_diameter = 1000 # enter this value as nm. It will be converted later
+    pipette_diameter = 500 # enter this value as nm. It will be converted later
     film_thickness = 27 # enter as nm. 27 nm is an approximation for now.
     v = 0.1 # V/s, scan rate.
     lin_start = -0.15 # this is the linear region start. This region is used to calculate and correct the background
     lin_end = 0.2 # this is the linear region end. This region is used to calculate and correct the background
     
     filepath = r"file"
-    datafile = pd.read_csv(filepath, sep='\t')
-    data_subset = ox_subset(sweeps, datafile, 5)
-    cleaned_current = current_cleanup(data_subset['Current (pA)'])
-    # print(cleaned_current)
-    corrected_current = background_correction(data_subset, cleaned_current, lin_start, lin_end)
-    dos = dos_calc(data_subset['Voltage (V)'], corrected_current, pipette_diameter, film_thickness, v)
-    
+    dos, data_subset = dos_array_return(filepath, fc_correction, sweeps, pipette_diameter, film_thickness, v, lin_start, lin_end)
     # this section is for visualizing the current used in the approximation
     # fig, ax = plt.subplots(tight_layout=True)
     # ax.plot(data_subset['Voltage (V)'], corrected_current, color='purple', linewidth=3)
@@ -48,6 +42,15 @@ def main():
     ax.set_xlabel("Density of States (eV$^{-1}$ cm$^{-3}$) $\\times$10$^{23}$")
     plt.show()
 
+
+def dos_array_return(filepath, fc_correction, sweeps, pipette_diameter, film_thickness, v, lin_start, lin_end):
+    datafile = pd.read_csv(filepath, sep='\t')
+    data_subset = ox_subset(sweeps, datafile, 5)
+    cleaned_current = current_cleanup(data_subset['Current (pA)'])
+    # print(cleaned_current)
+    corrected_current = background_correction(data_subset, cleaned_current, lin_start, lin_end)
+    dos = dos_calc(data_subset['Voltage (V)'], corrected_current, pipette_diameter, film_thickness, v)
+    return dos, data_subset
 
 def background_correction(data_subset, cleaned_current, lin_start, lin_end):
     # data_subset = data_subset.reset_index(drop=True)
