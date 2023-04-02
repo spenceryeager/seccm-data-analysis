@@ -63,7 +63,7 @@ def background_correction(data_subset, cleaned_current, lin_start, lin_end):
     for val in background:
         correction_vals[index] = (0 - val)
         index += 1
-    print(correction_vals)
+    # print(correction_vals)
     corrected_current = cleaned_current + correction_vals
     return(corrected_current)
 
@@ -84,7 +84,7 @@ def ox_subset(sweeps, datafile, start_index):
     ox_start = sweep_segments + int(sweep_segments/2)
     ox_end = sweep_segments*2
     datafile = datafile[ox_start:ox_end]
-    print(datafile)
+    # print(datafile)
     datafile = datafile[start_index:].reset_index(drop=True)
     return datafile
 
