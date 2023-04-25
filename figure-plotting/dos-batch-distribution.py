@@ -48,9 +48,13 @@ def main():
             std_dos.append(np.std(val_calcs))
             j += 1
         i += 1
-    print(avg_dos)      
+    print(std_dos)      
     fig, ax = plt.subplots()
+    avg_dos = np.array(avg_dos)
+    std_dos = np.array(std_dos)
     ax.plot(avg_dos, data_subset['Voltage (V)'], color='red')
+    ax.fill_betweenx(data_subset['Voltage (V)'], avg_dos - std_dos, avg_dos + std_dos, color='red', alpha=0.5)
+
     ax.invert_yaxis()
     ax.set_ylim(1.2, 0)
 
