@@ -20,7 +20,7 @@ def main():
     lin_end = 0.2 # this is the linear region end. This region is used to calculate and correct the background
 
 
-
+    plt.rcParams['font.size'] = 14
     file_list = []
     sorted_file_list = directory_sort(data_directory)
     dos_array = np.zeros(len(sorted_file_list))
@@ -44,20 +44,25 @@ def main():
         while j < val_it:
             for sub in all_dos_vals:
                 val_calcs.append(sub[j])
-            avg_dos.append(np.average(val_calcs))
-            std_dos.append(np.std(val_calcs))
+            avg_dos.append(np.average(val_calcs) / 10**22)
+            std_dos.append(np.std(val_calcs) / 10 **22)
             j += 1
         i += 1
     print(std_dos)      
     fig, ax = plt.subplots()
-    avg_dos = np.array(avg_dos)
+    avg_dos = np.array(avg_dos) 
     std_dos = np.array(std_dos)
     ax.plot(avg_dos, data_subset['Voltage (V)'], color='red')
-    ax.fill_betweenx(data_subset['Voltage (V)'], avg_dos - std_dos, avg_dos + std_dos, color='red', alpha=0.5)
+    ax.fill_betweenx(data_subset['Voltage (V)'], (avg_dos - std_dos), (avg_dos + std_dos), color='red', alpha=0.5)
 
     ax.invert_yaxis()
     ax.set_ylim(1.2, 0)
+    ax.set_xlim(-1, 6)
+    ax.set_xlabel("Density of States (states eV$^{-1}$ cm$^{-3}$) $\\times$ 10$^{22}$")
+    ax.set_ylabel("Potential (V) vs. Ag/AgCl")
+    
 
+    plt.tight_layout()
     plt.show() 
 
 
