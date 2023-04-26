@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-
+from scipy.stats import norm
+from scipy.signal import find_peaks, peak_widths
 
 def main():
     get_currents()
@@ -34,15 +35,43 @@ def get_currents():
 
 
 def make_plot(current_list, current_list2, current_list3):
+    mu1, sigma1 = norm.fit(current_list)
+    mu2, sigma2 = norm.fit(current_list2)
+    mu3, sigma3 = norm.fit(current_list3)
+    
+
+
     font = {'size': 14}
     plt.rc('font', **font)
     sample_size = len(current_list)
     bin_count = int(np.ceil(np.log2(sample_size)) + 1)
     bin_count2 = int(np.ceil(np.log2(len(current_list3)))+1)
+
+    x1 = np.linspace(-5,-1, 1000)
+    y1 = norm.pdf(x1, mu1, sigma1) * 150
+    fwhm = 2.355*sigma1
+    print(fwhm)
+
+    x2 = np.linspace(-16,-4, 1000)
+    y2 = norm.pdf(x2, mu2, sigma2) * 550
+    fwhm = 2.355*sigma2
+    print(fwhm)
+
+    x3 = np.linspace(-5,-1, 1000)
+    y3 = norm.pdf(x3, mu3, sigma3) * 200
+    fwhm = 2.355*sigma3
+    print(fwhm)
+
     fig, axes = plt.subplots(2)
-    axes[1].hist(current_list, bin_count, edgecolor='royalblue', color='dodgerblue', label='P3HT Crystalline Domain')
-    axes[1].hist(current_list2, bin_count, edgecolor='darkslategray', color='steelblue', label='P3HT Amorphous Domain')
-    axes[0].hist(current_list3, bin_count2, edgecolor='maroon', color='firebrick', label='PBTTT Amorphous Domain')
+    axes[1].hist(current_list, bin_count, edgecolor='white', color='dodgerblue', label='P3HT Crystalline Domain')
+    axes[1].plot(x1, y1, color='royalblue', label='P3HT Crystalline Gaussian Fit')
+
+    axes[1].hist(current_list2, bin_count, edgecolor='white', color='steelblue', label='P3HT Amorphous Domain')
+    axes[1].plot(x2, y2, color='darkslategray', label='P3HT Amorphous Gaussian Fit')
+
+    axes[0].hist(current_list3, bin_count2, edgecolor='white', color='firebrick', label='PBTTT Amorphous Domain')
+    axes[0].plot(x3, y3, color='maroon', label='PBTTT Amorphous Gaussian Fit')
+    
     axes[1].set_xlabel('Anodic Current (pA)')
     axes[1].set_ylabel('Counts')
     axes[1].set_xlim(-16,-1)
@@ -52,7 +81,7 @@ def make_plot(current_list, current_list2, current_list3):
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
 
-    fig.legend(lines, labels, fontsize=10, loc=2, bbox_to_anchor=(0.15, 0.85))
+    fig.legend(lines, labels, fontsize=8, loc=2, bbox_to_anchor=(0, 1), ncol=3)
     plt.show()
 
 
