@@ -62,26 +62,43 @@ def make_plot(current_list, current_list2, current_list3):
     fwhm = 2.355*sigma3
     print(fwhm)
 
-    fig, axes = plt.subplots(2)
-    axes[1].hist(current_list, bin_count, edgecolor='white', color='dodgerblue', label='P3HT Crystalline Domain')
-    axes[1].plot(x1, y1, color='royalblue', label='P3HT Crystalline Gaussian Fit')
+    fig, axes = plt.subplots(dpi=150)
+    axes.hist(current_list, bin_count, edgecolor='white', color='dodgerblue', label='P3HT Crystalline Domain')
+    axes.plot(x1, y1, color='royalblue', label='P3HT Crystalline Gaussian Fit')
 
-    axes[1].hist(current_list2, bin_count, edgecolor='white', color='steelblue', label='P3HT Amorphous Domain')
-    axes[1].plot(x2, y2, color='darkslategray', label='P3HT Amorphous Gaussian Fit')
+    axes.hist(current_list2, bin_count, edgecolor='white', color='steelblue', label='P3HT Amorphous Domain')
+    axes.plot(x2, y2, color='darkslategray', label='P3HT Amorphous Gaussian Fit')
 
-    axes[0].hist(current_list3, bin_count2, edgecolor='white', color='firebrick', label='PBTTT Amorphous Domain')
-    axes[0].plot(x3, y3, color='maroon', label='PBTTT Amorphous Gaussian Fit')
+    # axes[0].hist(current_list3, bin_count2, edgecolor='white', color='firebrick', label='PBTTT Amorphous Domain')
+    # axes[0].plot(x3, y3, color='maroon', label='PBTTT Amorphous Gaussian Fit')
     
-    axes[1].set_xlabel('Anodic Current (pA)')
-    axes[1].set_ylabel('Counts')
-    axes[1].set_xlim(-16,-1)
-    axes[0].set_xlim(-16,-1)
-    axes[0].xaxis.set_visible(False)
+    axes.set_xlabel('Anodic Current (pA)')
+    axes.set_ylabel('Counts')
+    # axes[1].set_xlim(-16,-1)
+    axes.set_xlim(-16,-1)
+    # axes[0].xaxis.set_visible(False)
     plt.subplots_adjust(wspace=0.0,hspace=0.0)
-    lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
-    lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
 
-    fig.legend(lines, labels, fontsize=8, loc=2, bbox_to_anchor=(0, 1), ncol=3)
+    # annotations
+    # axes[0].annotate("PBTTT", xy=(-15.8,140), fontsize=20)
+    # axes[1].annotate("P3HT", xy=(-15.8,150), fontsize=20)
+   
+    # axes[0].arrow(-8, 50, 3, 0, head_width=10, head_length=0.5, color="black")
+    # axes[0].annotate("FWHM~ 1.33 pA", xy=(-10,60), fontsize=10)
+
+    axes.arrow(-14, 40, 9.5, 0, head_width=10, head_length=0.5, color="black")
+    axes.annotate("FWHM$_{crystalline}$ ~ 0.98 pA", xy=(-15.5,50), fontsize=10)
+
+    axes.arrow(-14, 100, 4.5, 0, head_width=10, head_length=0.5, color="black")
+    axes.annotate("FWHM$_{amorphous}$ ~ 3.20 pA", xy=(-15.5,110), fontsize=10)
+
+
+    
+
+    # lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+    # lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+
+    # fig.legend(lines, labels, fontsize=8, loc=2, bbox_to_anchor=(0, 1), ncol=3)
     plt.show()
 
 
