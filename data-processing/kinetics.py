@@ -15,13 +15,17 @@ def main():
     ox_start = int(length/3)
     ox_end = ox_start + int(ox_start/2)
     ox_start = ox_start + 10
+    lin_start = 0.15
+    lin_end = 0.25
     cleaned_current = current_cleanup(data['Current (pA)'][ox_start:ox_end])
-    
-    fig, ax = plt.subplots()
-    ax.plot(data['Voltage (V)'][ox_start:ox_end], cleaned_current, color='red')
-    # ax.plot(data['Voltage (V)'][ox_start:ox_end], data['Current (pA)'][ox_start:ox_end], alpha=0.5, color='red')
+    print(data[ox_start:ox_end])
+    # corrected_current = background_correction(data['Voltage (V)'][ox_start:ox_end], cleaned_current, lin_start, lin_end)
 
-    plt.show()
+    # fig, ax = plt.subplots()
+    # ax.plot(data['Voltage (V)'][ox_start:ox_end], cleaned_current, color='red')
+    # ax.plot(data['Voltage (V)'][ox_start:ox_end], corrected_current, color='blue')
+
+    # plt.show()
 
 
 def current_cleanup(current_data):
@@ -32,6 +36,7 @@ def current_cleanup(current_data):
 
 def background_correction(data_subset, cleaned_current, lin_start, lin_end):
     # data_subset = data_subset.reset_index(drop=True)
+    print(data_subset)
     lin_start_index = data_subset.loc[data_subset['Voltage (V)'] == lin_start].index[0]
     lin_end_index = data_subset.loc[data_subset['Voltage (V)'] == lin_end].index[0]
     lin_regression = stats.linregress(data_subset['Voltage (V)'][lin_start_index:lin_end_index], cleaned_current[lin_start_index:lin_end_index])
