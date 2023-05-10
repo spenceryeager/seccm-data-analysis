@@ -9,7 +9,8 @@ import scipy.constants as constant
 import scipy.stats as stats
 
 def main():
-    data_path = r"C:\Users\spenceryeager\Documents\seccm-data\18Feb2023_rrP3HT_500nm-tip-Fc\scan\0X_2Y_rrP3HT-Fc.csv"
+    plt.rcParams['font.size'] = 14
+    data_path = r"data-processing\sample_file\sample_data.csv"
     data = pd.read_csv(data_path, sep='\t')
     length = len(data)
     ox_start = int(length/3)
@@ -25,7 +26,9 @@ def main():
     fig, ax = plt.subplots()
     ax.plot(data['Voltage (V)'], cleaned_current, color='red', label='Uncorrected')
     ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
-
+    ax.set_xlabel("Potential (V) vs. AgCl")
+    ax.set_ylabel("Current (pA)")
+    ax.legend(loc = "upper left", fontsize = 12)
     plt.show()
 
 
