@@ -10,7 +10,7 @@ def main():
 
 
 def make_plot():
-    dir_path = r"C:\Users\spenceryeager\Documents\seccm-data\13May2023_JuanNiOx_500nmTip\scan"
+    dir_path = r"D:\Research\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\scan"
     data_list = file_sort(dir_path)
     x_list = []
     y_list = []
@@ -25,9 +25,29 @@ def make_plot():
 
     data_path = os.path.join(dir_path, data_list[1])
     # data = pd.read_csv(data_path, sep='\t')
-    print(data_list)
-    index = len(data_list)
-    file_count = 0
+    loaded_data = []
+    for filename in data_list:
+        filepath = os.path.join(dir_path, filename)
+        data = pd.read_csv(filepath, sep='\t')
+        loaded_data.append(data)
+    # removing first element because it doesn't have the same number of elements.
+    loaded_data.pop(0)
+    print(loaded_data[0])
+    file_no = len(loaded_data)
+    print(file_no)
+    final_index = len(loaded_data[0])
+    index = 0
+    while index < final_index:
+        print(index)
+        index += 1
+    # for data in loaded_data:
+    #     current_data = []
+    #     current_data.append[0]
+    #     index = 0
+
+    
+    # index = len(data_list)
+    # file_count = 0
     # while file_count <= index:
     #     current_list = []
     #     fileskip = 0
