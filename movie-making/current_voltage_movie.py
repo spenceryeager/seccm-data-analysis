@@ -11,6 +11,7 @@ def main():
 
 def make_plot():
     dir_path = r"D:\Research\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\scan"
+    savepath = r"D:\Research\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\figs"
     data_list = file_sort(dir_path)
     x_list = []
     y_list = []
@@ -38,45 +39,24 @@ def make_plot():
     final_index = len(loaded_data[0])
     index = 0
     while index < final_index:
-        print(index)
+        savename = str(index) + ".png"
+        current_list = []
+        current_list.append(0)
+        for data in loaded_data:
+            current_list.append(data['Current (pA)'][index])
+        xy_current = pd.DataFrame(list(zip(x_list, y_list, current_list)), columns = ['X', 'Y', 'Current (pA)'])
+        Z_current = xy_current.pivot_table(index="X", columns="Y", values="Current (pA)").T.values
+        fig, ax = plt.subplots()
+        im = ax.pcolormesh(X, Y, Z_current, vmin=-120, vmax=100)
+        ax.set_xlabel('X ($\\rm\mu$m)')
+        ax.set_ylabel('Y ($\\rm\mu$m)')
+        ax.set_title("test")
+        cb = fig.colorbar(im, ax=ax)
+        cb.set_label('Current (pA)')
+        plt.savefig(os.path.join(savepath, savename))
+        plt.close()
+        print("frame number", index, "of", final_index, "saved")
         index += 1
-    # for data in loaded_data:
-    #     current_data = []
-    #     current_data.append[0]
-    #     index = 0
-
-    
-    # index = len(data_list)
-    # file_count = 0
-    # while file_count <= index:
-    #     current_list = []
-    #     fileskip = 0
-    #     for i in data_list:
-    #         if fileskip == 0:
-    #             current_list.append(0)
-    #             fileskip += 1
-    #         else:
-    #             data_path = os.path.join(dir_path, i)
-    #             data = pd.read_csv(data_path, sep='\t')
-    #             current_list.append(data['Current (pA)'][file_count])
-    #             voltage = str(data['Voltage (V)'][file_count])
-
-    #     # print(len(current_list))
-
-    #     xy_current = pd.DataFrame(list(zip(x_list, y_list, current_list)), columns = ['X', 'Y', 'Current (pA)'])
-    #     Z_current = xy_current.pivot_table(index="X", columns="Y", values="Current (pA)").T.values
-
-    #     fig, ax = plt.subplots()
-    #     im = ax.pcolormesh(X, Y, Z_current, vmin=-120, vmax=100)
-    #     ax.set_xlabel('X ($\\rm\mu$m)')
-    #     ax.set_ylabel('Y ($\\rm\mu$m)')
-    #     ax.set_title(voltage)
-    #     cb = fig.colorbar(im, ax=ax)
-    #     cb.set_label('Current (pA)')
-    #     savepath = r"C:\Users\spenceryeager\Documents\group_meetings\8Feb2023\400nm-tip\video"
-    #     savename = str(file_count) + ".png"
-    #     plt.savefig(os.path.join(savepath, savename))
-    #     file_count += 100
 
 
 
