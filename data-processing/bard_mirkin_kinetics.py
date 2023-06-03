@@ -1,4 +1,5 @@
 # this will be used to iterate over all recorded CVs and extract kinetics parameters, such as transfer coefficients and rate constants.
+# this is adopted from https://doi.org/10.1021/ac00043a020, which is not applicable to semiconductors. But can be used as an approximation
 
 import matplotlib.pyplot as plt
 import numpy as np
