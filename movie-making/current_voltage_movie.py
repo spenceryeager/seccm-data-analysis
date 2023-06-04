@@ -10,8 +10,8 @@ def main():
 
 
 def make_plot():
-    dir_path = r"D:\Research\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\scan"
-    savepath = r"D:\Research\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\figs"
+    dir_path = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\SPECS-Project\2023\23May2023_c16_PBTTT\scan"
+    savepath = r"C:\Users\Spencer\Documents\data-analysis\23May2023_c16_PBTTT\frames"
     data_list = file_sort(dir_path)
     x_list = []
     y_list = []
@@ -33,9 +33,7 @@ def make_plot():
         loaded_data.append(data)
     # removing first element because it doesn't have the same number of elements.
     loaded_data.pop(0)
-    print(loaded_data[0])
     file_no = len(loaded_data)
-    print(file_no)
     final_index = len(loaded_data[0])
     index = 0
     while index < final_index:
@@ -47,10 +45,10 @@ def make_plot():
         xy_current = pd.DataFrame(list(zip(x_list, y_list, current_list)), columns = ['X', 'Y', 'Current (pA)'])
         Z_current = xy_current.pivot_table(index="X", columns="Y", values="Current (pA)").T.values
         fig, ax = plt.subplots()
-        im = ax.pcolormesh(X, Y, Z_current, vmin=-120, vmax=100)
+        im = ax.pcolormesh(X, Y, Z_current, vmin=3, vmax=-10)
         ax.set_xlabel('X ($\\rm\mu$m)')
         ax.set_ylabel('Y ($\\rm\mu$m)')
-        ax.set_title("test")
+        ax.set_title(str(data['Voltage (V)'][index] * -1) + "V")
         cb = fig.colorbar(im, ax=ax)
         cb.set_label('Current (pA)')
         plt.savefig(os.path.join(savepath, savename))
