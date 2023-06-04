@@ -1,6 +1,8 @@
 # this will be used to iterate over all recorded CVs and extract kinetics parameters, such as transfer coefficients and rate constants.
 # this is adopted from https://doi.org/10.1021/ac00043a020, which is not applicable to semiconductors. But can be used as an approximation
 # this biggest assumption baked into this approximation is the electron transfer follows Butler Volmer kinetics.
+# big fat note: this was formulated in the paper for REDUCTION events. If using an oxidation event, you must take this into account.
+# What I mean by this is, three-quarter current should be on the reductive side (more negative) of E1/2, and quarter current should be on the oxidative side (more positive) of E1/2.
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,10 +37,8 @@ def main():
     data = data.reset_index(drop=True)
 
     data = get_id(id_potential, data)
-    q, h, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
+    h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
     alpha_solver(q, h, tq)
-    # print((q - h) * 1000)
-    # print((h - tq) * 1000)
 
 
     # fig, ax = plt.subplots()
@@ -91,27 +91,32 @@ def get_id(id_potential, data):
 
 def current_quartiles(data):
     half_quart = 0.5
-    quarter_quart = 0.25
-    three_quarter_quart = 0.75
+    three_quarter_quart = 0.25 # explanation for this at top of script
+    quarter_quart = 0.75 # explanation for this at top of script
     half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
     quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
     three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
-    # print(half_loc)
+    # print(half_loc, quarter_loc, three_quarter_loc)
     return(half_loc, quarter_loc, three_quarter_loc)
 
 
 def alpha_solver(q, h, tq):
+    # debugging vals below
+    # q = 0.063
+    # h = 0.033
+    # tq = 0.002
+
     # this is going to solve Equation 24 in the referenced Mirkin Bard paper.
     faraday = constant.physical_constants['Faraday constant'][0]
     f = (faraday / (constant.R * 298))
     n = 1
-    epq = np.exp(n * f * (np.absolute(q-h)))
-    eptq = np.exp(n * f * (np.absolute(tq-h)))
+    epq = np.exp(n * f * ((q-h)))
+    eptq = np.exp(n * f * ((tq-h)))
     func = lambda alpha : (np.power(epq, alpha) * (1 - (3*eptq))) + ((3*np.power(eptq, alpha))*(epq - 3)) + (9*eptq) - (epq)
-    print(epq)
-    print(eptq)
-    # a = np.exp()
-    print(f)
+    alpha_initial_guess = 0.5
+    alpha_solution = fsolve(func, alpha_initial_guess)
+    print(alpha_solution)
+
 
 
 if __name__ == "__main__":
