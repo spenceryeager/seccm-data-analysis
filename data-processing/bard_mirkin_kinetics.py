@@ -34,7 +34,9 @@ def main():
 
     data = get_id(id_potential, data)
     q, h, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
-    
+    print((q - h) * 1000)
+    print((h - tq) * 1000)
+
 
     fig, ax = plt.subplots()
     # ax.plot(data['Voltage (V)'], cleaned_current, color='red', label='Uncorrected')
