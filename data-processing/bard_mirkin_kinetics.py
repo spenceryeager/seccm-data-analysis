@@ -116,6 +116,11 @@ def alpha_solver(q, h, tq):
     alpha_initial_guess = 0.5
     alpha_solution = fsolve(func, alpha_initial_guess)
     print(alpha_solution)
+    theta_solver(alpha_solution, epq, eptq)
+
+
+def theta_solver(alpha, epq, eptq):
+    print('hello')
 
 
 
