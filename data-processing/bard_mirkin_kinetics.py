@@ -33,6 +33,9 @@ def main():
     data = data.reset_index(drop=True)
 
     data = get_id(id_potential, data)
+    q, h, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
+    
+
     fig, ax = plt.subplots()
     # ax.plot(data['Voltage (V)'], cleaned_current, color='red', label='Uncorrected')
     # ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
@@ -40,6 +43,7 @@ def main():
 
     ax.set_xlabel("Potential (V) vs. AgCl")
     ax.set_ylabel("Current (pA)")
+    ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
     ax.legend(loc = "upper left", fontsize = 12)
     plt.show()
 
@@ -79,6 +83,16 @@ def get_id(id_potential, data):
     data['Normalized Current (pA)'] = id_current
     return(data)
 
+
+def current_quartiles(data):
+    half_quart = 0.5
+    quarter_quart = 0.25
+    three_quarter_quart = 0.75
+    half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
+    quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
+    three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
+    # print(half_loc)
+    return(half_loc, quarter_loc, three_quarter_loc)
 
 
 if __name__ == "__main__":
