@@ -9,6 +9,8 @@ import scipy.signal as signal
 import scipy.ndimage as ndimage
 import scipy.constants as constant
 import scipy.stats as stats
+from scipy.optimize import fsolve
+
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
@@ -34,20 +36,21 @@ def main():
 
     data = get_id(id_potential, data)
     q, h, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
-    print((q - h) * 1000)
-    print((h - tq) * 1000)
+    alpha_solver(q, h, tq)
+    # print((q - h) * 1000)
+    # print((h - tq) * 1000)
 
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
     # ax.plot(data['Voltage (V)'], cleaned_current, color='red', label='Uncorrected')
     # ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
-    ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
+    # ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
 
-    ax.set_xlabel("Potential (V) vs. AgCl")
-    ax.set_ylabel("Current (pA)")
-    ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
-    ax.legend(loc = "upper left", fontsize = 12)
-    plt.show()
+    # ax.set_xlabel("Potential (V) vs. AgCl")
+    # ax.set_ylabel("Current (pA)")
+    # ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
+    # ax.legend(loc = "upper left", fontsize = 12)
+    # plt.show()
 
 
 def current_cleanup(current_data):
@@ -95,6 +98,20 @@ def current_quartiles(data):
     three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
     # print(half_loc)
     return(half_loc, quarter_loc, three_quarter_loc)
+
+
+def alpha_solver(q, h, tq):
+    # this is going to solve Equation 24 in the referenced Mirkin Bard paper.
+    faraday = constant.physical_constants['Faraday constant'][0]
+    f = (faraday / (constant.R * 298))
+    n = 1
+    epq = np.exp(n * f * (np.absolute(q-h)))
+    eptq = np.exp(n * f * (np.absolute(tq-h)))
+    func = lambda alpha : (np.power(epq, alpha) * (1 - (3*eptq))) + ((3*np.power(eptq, alpha))*(epq - 3)) + (9*eptq) - (epq)
+    print(epq)
+    print(eptq)
+    # a = np.exp()
+    print(f)
 
 
 if __name__ == "__main__":
