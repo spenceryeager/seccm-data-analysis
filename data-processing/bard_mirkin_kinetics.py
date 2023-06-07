@@ -17,7 +17,7 @@ from scipy.optimize import fsolve
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
     lin_start = 0.15 # Defining start of linear region for background correction
-    lin_end = 0.25 # Defining end of linear region for background correction
+    lin_end = 0.29 # Defining end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
     id_potential = 0.55 # V, potential where diffusion-limited current is observed
 
@@ -32,25 +32,29 @@ def main():
     data = data[ox_start:ox_end]
     cleaned_current = current_cleanup(data['Current (pA)'])
     corrected_current = background_zero(cleaned_current)
-    # corrected_current = background_correction(data, cleaned_current, lin_start, lin_end) # deprecated way of correcting current. Skews the trend in my opinion.
+    corrected_current = background_correction(data, corrected_current, lin_start, lin_end) # deprecated way of correcting current. Skews the trend in my opinion.
     data['Zeroed Current (pA)'] = corrected_current
     data = data.reset_index(drop=True)
 
     data = get_id(id_potential, data)
     h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
+    print(q - tq)
+    print((h-q), (tq-h))
     alpha_solver(q, h, tq)
 
 
-    # fig, ax = plt.subplots()
+    fig, ax = plt.subplots()
+    # ax.plot(data['Voltage (V)'], data['Current (pA)'], color='purple', label='Raw')
     # ax.plot(data['Voltage (V)'], cleaned_current, color='red', label='Uncorrected')
     # ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
-    # ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
 
-    # ax.set_xlabel("Potential (V) vs. AgCl")
-    # ax.set_ylabel("Current (pA)")
-    # ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
-    # ax.legend(loc = "upper left", fontsize = 12)
-    # plt.show()
+    ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
+
+    ax.set_xlabel("Potential (V) vs. AgCl")
+    ax.set_ylabel("Current (pA)")
+    ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
+    ax.legend(loc = "upper left", fontsize = 12)
+    plt.show()
 
 
 def current_cleanup(current_data):
@@ -83,7 +87,7 @@ def background_zero(current_data):
 
 
 def get_id(id_potential, data):
-    id_val = data.loc[data['Voltage (V)'] == 0.55, 'Zeroed Current (pA)']
+    id_val = data.loc[data['Voltage (V)'] == id_potential, 'Zeroed Current (pA)']
     id_current = data['Zeroed Current (pA)'] / id_val.values[0]
     data['Normalized Current (pA)'] = id_current
     return(data)
@@ -91,20 +95,20 @@ def get_id(id_potential, data):
 
 def current_quartiles(data):
     half_quart = 0.5
-    three_quarter_quart = 0.25 # explanation for this at top of script
-    quarter_quart = 0.75 # explanation for this at top of script
+    three_quarter_quart = 0.75 # explanation for this at top of script
+    quarter_quart = 0.25 # explanation for this at top of script
     half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
     quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
     three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
-    # print(half_loc, quarter_loc, three_quarter_loc)
+    print(half_loc, quarter_loc, three_quarter_loc)
     return(half_loc, quarter_loc, three_quarter_loc)
 
 
 def alpha_solver(q, h, tq):
     # debugging vals below
-    # q = 0.063
-    # h = 0.033
-    # tq = 0.002
+    # q = 0.417
+    # h = 0.386
+    # tq = 0.356
 
     # this is going to solve Equation 24 in the referenced Mirkin Bard paper.
     faraday = constant.physical_constants['Faraday constant'][0]
