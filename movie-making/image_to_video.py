@@ -5,9 +5,10 @@ import numpy as np
 
 
 def main():
-    filepath = r"C:\Users\spenceryeager\Documents\seccm-data\22May2023_c16_PBTTT\movie"
-    movie_outputpath = r"R:\Spencer Yeager\data\SPECS-Project\2023\22May2023_c16_PBTTT\actual_movie\output.mp4"
-    image_merge(filepath, movie_outputpath)
+    filepath = r"R:\Spencer Yeager\data\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\frames"
+    movie_outputpath = r"R:\Spencer Yeager\data\NiOx_Project\2023\05_May\13May2023_JuanNiOx_500nmTip\movie1"
+    moviename = "movie.mp4"
+    image_merge(filepath, os.path.join(movie_outputpath, moviename))
 
 
 def image_merge(filepath, movie_outputpath):
@@ -21,7 +22,7 @@ def image_merge(filepath, movie_outputpath):
     cv2.imshow('video', frame)
     height, width, channels = frame.shape
     fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
-    out = cv2.VideoWriter(movie_outputpath, fourcc, 20.0, (width, height))
+    out = cv2.VideoWriter(movie_outputpath, fourcc, 60.0, (width, height))
     
     for number in frameno:
         make_image_name(number)
