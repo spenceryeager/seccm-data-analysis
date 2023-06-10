@@ -12,6 +12,7 @@ import scipy.ndimage as ndimage
 import scipy.constants as constant
 import scipy.stats as stats
 from scipy.optimize import fsolve
+from oldham_zoski_sim import sigmoid_maker
 
 
 def main():
@@ -19,28 +20,26 @@ def main():
     lin_start = 0.15 # Defining start of linear region for background correction
     lin_end = 0.29 # Defining end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
-    id_potential = 0.55 # V, potential where diffusion-limited current is observed
+    id_potential = 0.2 # V, potential where diffusion-limited current is observed
 
     # working parts of code
     plt.rcParams['font.size'] = 14
     data_path = r"data-processing\sample_file\sample_data.csv"
     data = pd.read_csv(data_path, sep='\t')
+    data['Current (pA)'] *= -1 # converting to US convention. Yuck. IUPAC rules.
     length = len(data)
     ox_start = int(length/3)
     ox_end = ox_start + int(ox_start/2)
-    ox_start = ox_start + 10
+    ox_start = ox_start + 200
     data = data[ox_start:ox_end]
     cleaned_current = current_cleanup(data['Current (pA)'])
-    corrected_current = background_zero(cleaned_current)
-    corrected_current = background_correction(data, corrected_current, lin_start, lin_end) # deprecated way of correcting current. Skews the trend in my opinion.
+    corrected_current = background_correction(data, cleaned_current, lin_start, lin_end) # deprecated way of correcting current. Skews the trend in my opinion.
+    corrected_current = background_zero(corrected_current)
     data['Zeroed Current (pA)'] = corrected_current
     data = data.reset_index(drop=True)
-
     data = get_id(id_potential, data)
     h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
-    print(q - tq)
-    print((h-q), (tq-h))
-    alpha_solver(q, h, tq)
+    # alpha_solver(q, h, tq)
 
 
     fig, ax = plt.subplots()
@@ -51,9 +50,10 @@ def main():
     ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
 
     ax.set_xlabel("Potential (V) vs. AgCl")
-    ax.set_ylabel("Current (pA)")
+    ax.set_ylabel("Normalized Current")
     ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
-    ax.legend(loc = "upper left", fontsize = 12)
+    ax.legend(loc = "best", fontsize = 12)
+    ax.invert_xaxis()
     plt.show()
 
 
@@ -104,27 +104,27 @@ def current_quartiles(data):
     return(half_loc, quarter_loc, three_quarter_loc)
 
 
-def alpha_solver(q, h, tq):
-    # debugging vals below
-    # q = 0.417
-    # h = 0.386
-    # tq = 0.356
+# def alpha_solver(q, h, tq):
+#     # debugging vals below
+#     # q = 0.42
+#     # h = 0.387
+#     # tq = 0.357
 
-    # this is going to solve Equation 24 in the referenced Mirkin Bard paper.
-    faraday = constant.physical_constants['Faraday constant'][0]
-    f = (faraday / (constant.R * 298))
-    n = 1
-    epq = np.exp(n * f * ((q-h)))
-    eptq = np.exp(n * f * ((tq-h)))
-    func = lambda alpha : (np.power(epq, alpha) * (1 - (3*eptq))) + ((3*np.power(eptq, alpha))*(epq - 3)) + (9*eptq) - (epq)
-    alpha_initial_guess = 0.5
-    alpha_solution = fsolve(func, alpha_initial_guess)
-    print(alpha_solution)
-    theta_solver(alpha_solution, epq, eptq)
+#     # this is going to solve Equation 24 in the referenced Mirkin Bard paper.
+#     faraday = constant.physical_constants['Faraday constant'][0]
+#     f = (faraday / (constant.R * 298))
+#     n = 1
+#     epq = np.exp(n * f * ((q-h)))
+#     eptq = np.exp(n * f * ((tq-h)))
+#     func = lambda alpha : (np.power(epq, alpha) * (1 - (3*eptq))) + ((3*np.power(eptq, alpha))*(epq - 3)) + (9*eptq) - (epq)
+#     alpha_initial_guess = 0.5
+#     alpha_solution = fsolve(func, alpha_initial_guess)
+#     print(alpha_solution)
+#     theta_solver(alpha_solution, epq, eptq)
 
 
-def theta_solver(alpha, epq, eptq):
-    print('hello')
+# def theta_solver(alpha, epq, eptq):
+#     print('hello')
 
 
 
