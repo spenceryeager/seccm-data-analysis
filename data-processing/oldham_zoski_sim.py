@@ -12,17 +12,23 @@ def main():
     dr = 1 * (10 **-5)
     n = 1
     eo = 0.4
-    e = np.linspace(-0.2, 0.8, 50)
-    print(e)
+    e = np.linspace(-0.2, 0.8, 100)
     ko = 0.003
     transfer_coef = 0.89
+    val = sigmoid_maker(do, dr, n, eo, e, ko, transfer_coef)
+    fig, ax = plt.subplots()
+    ax.plot(e, val)
+    ax.set_xlabel("Potential (V)")
+    ax.set_ylabel("Normalized Current")
+    ax.invert_xaxis()
+    plt.show()
+
+
+def sigmoid_maker(do, dr, n, eo, e, ko, transfer_coef):
     theta = theta_calc(do, dr, n, eo, e)
     kappa = kappa_calc(ko, transfer_coef, n, e, eo)
     val = current_potential_relation(theta, kappa)
-    print(val)
-    fig, ax = plt.subplots()
-    ax.plot(e, val)
-    plt.show()
+    return val
 
     
 
