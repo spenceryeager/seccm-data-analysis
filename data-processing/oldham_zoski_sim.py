@@ -30,6 +30,17 @@ def sigmoid_maker(do, dr, n, eo, e, ko, transfer_coef):
     val = current_potential_relation(theta, kappa)
     return val
 
+def sigmoid_maker_curvefit(e, ko, transfer_coef):
+    # this function only relies on x vals, ko, and transfer_coef for compatibility with scipy's curve fit.
+    dr = 1
+    do = 1
+    n = 1
+    eo = 0.4
+    theta = theta_calc(do, dr, n, eo, e)
+    kappa = kappa_calc(ko, transfer_coef, n, e, eo)
+    val = current_potential_relation(theta, kappa)
+    return val
+
     
 
 def theta_calc(do, dr, n, eo, e):
