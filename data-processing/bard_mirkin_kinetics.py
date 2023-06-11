@@ -64,7 +64,7 @@ def make_plot(data, approximation_currents, q, h, tq):
     # ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
 
     ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
-    ax.plot(data['Voltage (V)'], approximation_currents, color='blue', label='Fitted')
+    ax.plot(data['Voltage (V)'], approximation_currents, color='black', label='Fitted', linestyle='--')
     ax.set_xlabel("Potential (V) vs. AgCl")
     ax.set_ylabel("Normalized Current")
     ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
@@ -75,7 +75,6 @@ def make_plot(data, approximation_currents, q, h, tq):
 
 def get_rate_constant(diff_coef, radius, kappa_naught):
     rate_constant = (4 * diff_coef * kappa_naught) / (constant.pi * radius)
-    print(rate_constant)
     return rate_constant
 
 
@@ -122,7 +121,6 @@ def current_quartiles(data):
     half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
     quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
     three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
-    print(half_loc, quarter_loc, three_quarter_loc)
     return(half_loc, quarter_loc, three_quarter_loc)
 
 
