@@ -12,20 +12,25 @@ import scipy.ndimage as ndimage
 import scipy.constants as constant
 import scipy.stats as stats
 from scipy.optimize import fsolve
-from oldham_zoski_sim import sigmoid_maker
+from scipy.optimize import curve_fit
+from oldham_zoski_sim import sigmoid_maker_curvefit
 
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    lin_start = 0.15 # Defining start of linear region for background correction
-    lin_end = 0.29 # Defining end of linear region for background correction
+    linear_region = [0.15, 0.29] # Defining start and end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
     id_potential = 0.2 # V, potential where diffusion-limited current is observed
+    diffusion_coef = 1 * (10 ** -6) # cm2/s
+    tip_radius = 2.5 * (10 **-5) #cm
 
     # working parts of code
-    plt.rcParams['font.size'] = 14
     data_path = r"data-processing\sample_file\sample_data.csv"
     data = pd.read_csv(data_path, sep='\t')
+    get_kinetics(data, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+
+
+def get_kinetics(data, linear_region, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
     data['Current (pA)'] *= -1 # converting to US convention. Yuck. IUPAC rules.
     length = len(data)
     ox_start = int(length/3)
@@ -33,28 +38,45 @@ def main():
     ox_start = ox_start + 200
     data = data[ox_start:ox_end]
     cleaned_current = current_cleanup(data['Current (pA)'])
-    corrected_current = background_correction(data, cleaned_current, lin_start, lin_end) # deprecated way of correcting current. Skews the trend in my opinion.
+    corrected_current = background_correction(data, cleaned_current, linear_region[0], linear_region[1]) # deprecated way of correcting current. Skews the trend in my opinion.
     corrected_current = background_zero(corrected_current)
     data['Zeroed Current (pA)'] = corrected_current
     data = data.reset_index(drop=True)
-    data = get_id(id_potential, data)
+    data = get_id(diffusion_current_potential, data)
     h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
-    # alpha_solver(q, h, tq)
+    
+    e = data['Voltage (V)']
+    parameters, covariance = curve_fit(sigmoid_maker_curvefit, data['Voltage (V)'], data['Normalized Current (pA)'])
+    approximation_currents = sigmoid_maker_curvefit(data['Voltage (V)'], parameters[0], parameters[1])
+    kappa_naught = parameters[0]
+    get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
+    if plotting:
+        make_plot(data, approximation_currents, q, h, tq)
+    else:
+        print("Analysizing next CV")
 
-
+    
+def make_plot(data, approximation_currents, q, h, tq):
+    plt.rcParams['font.size'] = 14
     fig, ax = plt.subplots()
     # ax.plot(data['Voltage (V)'], data['Current (pA)'], color='purple', label='Raw')
     # ax.plot(data['Voltage (V)'], cleaned_current, color='red', label='Uncorrected')
     # ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
 
     ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
-
+    ax.plot(data['Voltage (V)'], approximation_currents, color='blue', label='Fitted')
     ax.set_xlabel("Potential (V) vs. AgCl")
     ax.set_ylabel("Normalized Current")
     ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
     ax.legend(loc = "best", fontsize = 12)
     ax.invert_xaxis()
     plt.show()
+
+
+def get_rate_constant(diff_coef, radius, kappa_naught):
+    rate_constant = (4 * diff_coef * kappa_naught) / (constant.pi * radius)
+    print(rate_constant)
+    return rate_constant
 
 
 def current_cleanup(current_data):
