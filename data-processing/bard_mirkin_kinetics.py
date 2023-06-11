@@ -26,11 +26,11 @@ def main():
 
     # working parts of code
     data_path = r"data-processing\sample_file\sample_data.csv"
+    get_kinetics(data_path, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+
+
+def get_kinetics(data_path, linear_region, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
     data = pd.read_csv(data_path, sep='\t')
-    get_kinetics(data, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
-
-
-def get_kinetics(data, linear_region, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
     data['Current (pA)'] *= -1 # converting to US convention. Yuck. IUPAC rules.
     length = len(data)
     ox_start = int(length/3)
@@ -123,6 +123,8 @@ def current_quartiles(data):
     three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
     return(half_loc, quarter_loc, three_quarter_loc)
 
+
+# all below is not necessary anymore. This approximation was not written for semiconductors and was also formulated for UMEs.
 
 # def alpha_solver(q, h, tq):
 #     # debugging vals below
