@@ -26,7 +26,8 @@ def main():
 
     # working parts of code
     data_path = r"data-processing\sample_file\sample_data.csv"
-    get_kinetics(data_path, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error = get_kinetics(data_path, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+    print(rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
 
 def get_kinetics(data_path, linear_region, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
@@ -49,11 +50,16 @@ def get_kinetics(data_path, linear_region, diffusion_current_potential, diffusio
     parameters, covariance = curve_fit(sigmoid_maker_curvefit, data['Voltage (V)'], data['Normalized Current (pA)'])
     approximation_currents = sigmoid_maker_curvefit(data['Voltage (V)'], parameters[0], parameters[1])
     kappa_naught = parameters[0]
-    get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
+    transfer_coef = parameters[1]
+    error_in_fits = np.sqrt(np.diag(covariance))
+    kappa_naught_error = error_in_fits[0]
+    transfer_coef_error = error_in_fits[1]
+    rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
     if plotting:
         make_plot(data, approximation_currents, q, h, tq)
     else:
         print("Analysizing next CV")
+    return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error
 
     
 def make_plot(data, approximation_currents, q, h, tq):
