@@ -62,7 +62,7 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
         kappa_naught_error = error_in_fits[0]
         transfer_coef_error = error_in_fits[1]
         rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
-    except RunetimeError:
+    except RuntimeError:
         "Fit failed."
         kappa_naught = np.nan
         transfer_coef = np.nan
