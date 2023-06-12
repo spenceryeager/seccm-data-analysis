@@ -52,14 +52,25 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
     h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
     
     e = data['Voltage (V)']
-    parameters, covariance = curve_fit(sigmoid_maker_curvefit, data['Voltage (V)'], data['Normalized Current (pA)'])
-    approximation_currents = sigmoid_maker_curvefit(data['Voltage (V)'], parameters[0], parameters[1])
-    kappa_naught = parameters[0]
-    transfer_coef = parameters[1]
-    error_in_fits = np.sqrt(np.diag(covariance))
-    kappa_naught_error = error_in_fits[0]
-    transfer_coef_error = error_in_fits[1]
-    rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
+
+    try:
+        parameters, covariance = curve_fit(sigmoid_maker_curvefit, data['Voltage (V)'], data['Normalized Current (pA)'])
+        approximation_currents = sigmoid_maker_curvefit(data['Voltage (V)'], parameters[0], parameters[1])
+        kappa_naught = parameters[0]
+        transfer_coef = parameters[1]
+        error_in_fits = np.sqrt(np.diag(covariance))
+        kappa_naught_error = error_in_fits[0]
+        transfer_coef_error = error_in_fits[1]
+        rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
+    except RunetimeError:
+        "Fit failed."
+        kappa_naught = np.nan
+        transfer_coef = np.nan
+        error_in_fits = np.nan
+        kappa_naught_error = np.nan
+        transfer_coef_error = np.nan
+        rate_constant = np.nan
+    
     if plotting:
         make_plot(data, approximation_currents, q, h, tq)
     else:
