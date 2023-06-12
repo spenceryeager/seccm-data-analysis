@@ -23,21 +23,26 @@ def main():
     id_potential = 0.2 # V, potential where diffusion-limited current is observed
     diffusion_coef = 1 * (10 ** -6) # cm2/s
     tip_radius = 2.5 * (10 **-5) #cm
+    potential_range = [0.6, 0.10] # V!
+    sweep_number = 3
 
     # working parts of code
     data_path = r"data-processing\sample_file\sample_data.csv"
-    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error = get_kinetics(data_path, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
     print(rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
 
-def get_kinetics(data_path, linear_region, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
+def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
     data = pd.read_csv(data_path, sep='\t')
     data['Current (pA)'] *= -1 # converting to US convention. Yuck. IUPAC rules.
-    length = len(data)
-    ox_start = int(length/3)
-    ox_end = ox_start + int(ox_start/2)
-    ox_start = ox_start + 200
-    data = data[ox_start:ox_end]
+    loc1 = data.loc[data['Voltage (V)'] == potential_range[0]].index   
+    loc2 = data.loc[data['Voltage (V)'] == potential_range[1]].index
+    
+    if loc1[sweep] < loc2[sweep]:
+        data = data[loc1[sweep]:loc2[sweep]]
+    else:
+        data = data[loc2[sweep]:loc1[sweep]]
+
     cleaned_current = current_cleanup(data['Current (pA)'])
     corrected_current = background_correction(data, cleaned_current, linear_region[0], linear_region[1]) # deprecated way of correcting current. Skews the trend in my opinion.
     corrected_current = background_zero(corrected_current)
@@ -92,17 +97,23 @@ def current_cleanup(current_data):
 
 def background_correction(data_subset, cleaned_current, lin_start, lin_end):
     data_subset = data_subset.reset_index(drop=True)
-    lin_start_index = data_subset.loc[data_subset['Voltage (V)'] == lin_start].index[0]
-    lin_end_index = data_subset.loc[data_subset['Voltage (V)'] == lin_end].index[0]
-    # print(cleaned_current[lin_end_index:lin_start_index])
-    lin_regression = stats.linregress(data_subset['Voltage (V)'][lin_end_index:lin_start_index], cleaned_current[lin_end_index:lin_start_index])
+    lin_loc_1 = data_subset.loc[data_subset['Voltage (V)'] == lin_start].index[0]
+    lin_loc_2 = data_subset.loc[data_subset['Voltage (V)'] == lin_end].index[0]
+
+    if lin_loc_1 < lin_loc_2:
+        index1 = lin_loc_1
+        index2 = lin_loc_2
+    else:
+        index1 = lin_loc_2
+        index2 = lin_loc_1
+
+    lin_regression = stats.linregress(data_subset['Voltage (V)'][index1:index2], cleaned_current[index1:index2])
     background = (lin_regression[0] * data_subset['Voltage (V)']) + lin_regression[1]
     correction_vals = np.zeros(len(background))
     index = 0
     for val in background:
         correction_vals[index] = (0 - val)
         index += 1
-    # print(correction_vals)
     corrected_current = cleaned_current + correction_vals
     return(corrected_current)
 
