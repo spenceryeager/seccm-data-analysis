@@ -17,10 +17,36 @@ def main():
     id_potential = 0.2 # V, potential where diffusion-limited current is observed
     diffusion_coef = 1 * (10 ** -6) # cm2/s
     tip_radius = 2.5 * (10 **-5) #cm
+    potential_range = [0.7, 0.10] # V!
+    sweep_number = 3
+    kinetics_df = pd.DataFrame(columns = ['Rate Constant (cm/s)', 'log10 Rate Constant', "Transfer Coefficient", "Transfer Coefficient Error", "KappaNaught", "KappaNaught Error"])
+    rate_constant_list = []
+    transfer_coef_list = []
+    transfer_coef_error_list = []
+    kappa_naught_list = []
+    kappa_naught_error_list = []
+
     for filename in filelist:
-        data_path = os.path.join(directory,filename)
-        rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error = get_kinetics(data_path, linear_region, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=False)
-        print(np.log10(rate_constant))
+
+        if not no.isdir(os.path.join(directory, filename)):
+            data_path = os.path.join(directory,filename)
+            rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=False)
+            rate_constant_list.append(rate_constant)
+            transfer_coef_list.append(transfer_coef)
+            transfer_coef_error_list.append(transfer_coef_error)
+            kappa_naught_list.append(kappa_naught)
+            kappa_naught_error_list.append(kappa_naught_error)
+
+
+
+    kinetics_df['Rate Constant (cm/s)'] = rate_constant_list
+    kinetics_df['log10 Rate Constant'] = np.log10(rate_constant_list)
+    kinetics_df['Transfer Coefficient'] = transfer_coef_list
+    kinetics_df['Transfer Coefficient Error'] = transfer_coef_error_list
+    kinetics_df['KappaNaught'] = kappa_naught_list
+    kinetics_df['KappaNaught Error'] = kappa_naught_error_list
+    print(kinetics_df)
+
 
 if __name__ == "__main__":
     main()
