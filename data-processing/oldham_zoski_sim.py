@@ -13,9 +13,10 @@ def main():
     n = 1
     eo = 0.4
     e = np.linspace(-0.2, 0.8, 100)
+    e = e - eo
     ko = 0.003
     transfer_coef = 0.89
-    val = sigmoid_maker(do, dr, n, eo, e, ko, transfer_coef)
+    val = sigmoid_maker(do, dr, n, e, ko, transfer_coef)
     fig, ax = plt.subplots()
     ax.plot(e, val)
     ax.set_xlabel("Potential (V)")
@@ -24,9 +25,9 @@ def main():
     plt.show()
 
 
-def sigmoid_maker(do, dr, n, eo, e, ko, transfer_coef):
-    theta = theta_calc(do, dr, n, eo, e)
-    kappa = kappa_calc(ko, transfer_coef, n, e, eo)
+def sigmoid_maker(do, dr, n, e, ko, transfer_coef):
+    theta = theta_calc(do, dr, n, e)
+    kappa = kappa_calc(ko, transfer_coef, n, e)
     val = current_potential_relation(theta, kappa)
     return val
 
@@ -35,26 +36,25 @@ def sigmoid_maker_curvefit(e, ko, transfer_coef):
     dr = 1
     do = 1
     n = 1
-    eo = 0.4
-    theta = theta_calc(do, dr, n, eo, e)
-    kappa = kappa_calc(ko, transfer_coef, n, e, eo)
+    theta = theta_calc(do, dr, n, e)
+    kappa = kappa_calc(ko, transfer_coef, n, e)
     val = current_potential_relation(theta, kappa)
     return val
 
     
 
-def theta_calc(do, dr, n, eo, e):
+def theta_calc(do, dr, n, e):
     temp = 298
     F = constant.physical_constants['Faraday constant'][0]
-    exponential = np.exp((n * F * (e - eo)) / (temp * constant.R))
+    exponential = np.exp((n * F * (e)) / (temp * constant.R))
     theta_val = 1 + (do/dr) * exponential
     return(theta_val)
 
 
-def kappa_calc(ko, transfer_coef, n, e, eo):
+def kappa_calc(ko, transfer_coef, n, e):
     temp = 298
     F = constant.physical_constants['Faraday constant'][0]
-    kappa_val = ko * np.exp(((- n) * transfer_coef * F * (e - eo)) / (temp * constant.R))
+    kappa_val = ko * np.exp(((- n) * transfer_coef * F * (e)) / (temp * constant.R))
     return(kappa_val)
 
 
