@@ -18,18 +18,18 @@ from oldham_zoski_sim import sigmoid_maker_curvefit
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    linear_region = [0.15, 0.29] # Defining start and end of linear region for background correction
+    linear_region = [0.24, 0.25] # Defining start and end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
-    id_potential = 0.2 # V, potential where diffusion-limited current is observed
+    id_potential = 0.24 # V, potential where diffusion-limited current is observed
     diffusion_coef = 1 * (10 ** -6) # cm2/s
     tip_radius = 2.5 * (10 **-5) #cm
-    potential_range = [0.6, 0.10] # V!
-    sweep_number = 3
+    potential_range = [0.6, 0.15] # V!
+    sweep_number = 2
 
     # working parts of code
     data_path = r"data-processing\sample_file\sample_data.csv"
-    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
-    print(rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
+    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+    print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
 
 def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
@@ -50,18 +50,19 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
     data = data.reset_index(drop=True)
     data = get_id(diffusion_current_potential, data)
     h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
-    
-    e = data['Voltage (V)']
+    # e = data['Voltage (V)']
 
     try:
-        parameters, covariance = curve_fit(sigmoid_maker_curvefit, data['Voltage (V)'], data['Normalized Current (pA)'])
-        approximation_currents = sigmoid_maker_curvefit(data['Voltage (V)'], parameters[0], parameters[1])
+        # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.4), data['Normalized Current (pA)'], bounds=([-np.inf, 0],[20,1])) # adding bounds
+        parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.5), data['Normalized Current (pA)'])
+        approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - 0.5), parameters[0], parameters[1])
         kappa_naught = parameters[0]
         transfer_coef = parameters[1]
         error_in_fits = np.sqrt(np.diag(covariance))
         kappa_naught_error = error_in_fits[0]
         transfer_coef_error = error_in_fits[1]
         rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
+        fit_success = True
     except RuntimeError:
         "Fit failed."
         kappa_naught = np.nan
@@ -70,15 +71,19 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
         kappa_naught_error = np.nan
         transfer_coef_error = np.nan
         rate_constant = np.nan
-    
-    if plotting:
-        make_plot(data, approximation_currents, q, h, tq)
-    else:
-        print("Analysizing next CV")
-    return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error
+        approximation_currents = 0
+        fit_success = False
 
     
-def make_plot(data, approximation_currents, q, h, tq):
+    if plotting:
+        make_plot(data, approximation_currents, q, h, tq, fit_success)
+    else:
+        print("Analysizing next CV")
+
+    return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, h
+
+    
+def make_plot(data, approximation_currents, q, h, tq, fit_success):
     plt.rcParams['font.size'] = 14
     fig, ax = plt.subplots()
     # ax.plot(data['Voltage (V)'], data['Current (pA)'], color='purple', label='Raw')
@@ -86,7 +91,10 @@ def make_plot(data, approximation_currents, q, h, tq):
     # ax.plot(data['Voltage (V)'], corrected_current, color='blue', label='Background corrected')
 
     ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
-    ax.plot(data['Voltage (V)'], approximation_currents, color='black', label='Fitted', linestyle='--')
+
+    if fit_success:
+        ax.plot(data['Voltage (V)'], approximation_currents, color='black', label='Fitted', linestyle='--')
+
     ax.set_xlabel("Potential (V) vs. AgCl")
     ax.set_ylabel("Normalized Current")
     ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
