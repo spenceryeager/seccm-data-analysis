@@ -13,7 +13,7 @@ def main():
     kinetics_data_2 = pd.read_csv(kinetics_file_2)
     
     mu1, sigma1, fwhm1 = gauss_fitting(kinetics_data['log10 Rate Constant'])
-    x_vals = np.linspace(-5, -1, 1000)
+    x_vals = np.linspace(-4, -1, 1000)
     kd1_gauss = norm.pdf(x_vals, mu1, sigma1) * 70
 
     mu2, sigma2, fwhm2 = gauss_fitting(kinetics_data_2['log10 Rate Constant'])
@@ -36,13 +36,15 @@ def gauss_fitting(spread):
 
 
 def plotting(data, data2, gauss1x, gauss1y, gauss2y, bin_num):
-    fig, ax = plt.subplots()
-    ax.hist(data['log10 Rate Constant'], edgecolor='royalblue', color='dodgerblue', label='rr-P3HT')
-    ax.plot(gauss1x, gauss1y, color='darkslategray')
-    ax.hist(data2['log10 Rate Constant'], bin_num, edgecolor='firebrick', color='red', label='PBTTT')
-    ax.plot(gauss1x, gauss2y, color='darkred')
-    ax.set_xlabel('log$_{10}$ $k_{0}$')
-    ax.set_ylabel('Counts')
+    font = {'size': 14}
+    plt.rc('font', **font)
+    fig, ax = plt.subplots(2)
+    ax[0].hist(data['log10 Rate Constant'], edgecolor='royalblue', color='dodgerblue', label='rr-P3HT')
+    ax[0].plot(gauss1x, gauss1y, color='darkslategray')
+    ax[1].hist(data2['log10 Rate Constant'], bin_num, edgecolor='firebrick', color='red', label='PBTTT')
+    ax[1].plot(gauss1x, gauss2y, color='darkred')
+    ax[1].set_xlabel('log$_{10}$ $k_{0}$')
+    ax[1].set_ylabel('Counts')
     plt.legend()
     plt.show()
 
