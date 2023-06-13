@@ -3,16 +3,25 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 
 def main():
-    kinetics_file = r"D:\Research\SPECS-Project\2023\24Mar2023_P3HT-with-Fc\analysis_folder\results_with_bounds.csv"
-    kinetics_file_2 = r"D:\Research\SPECS-Project\2023\28Mar2023_PBTTT_Fc\analysis\results_with_bounds.csv"
+    kinetics_file = r"C:\Users\spenceryeager\Documents\seccm-data\24Mar2023_P3HT-with-Fc\analysis\results_with_bounds.csv"
+    kinetics_file_2 = r"C:\Users\spenceryeager\Documents\seccm-data\28Mar2023_PBTTT_Fc\analysis\results_with_bounds.csv"
     kinetics_data = pd.read_csv(kinetics_file)
     kinetics_data_2 = pd.read_csv(kinetics_file_2)
+    
+    mu1, sigma1, fwhm1 = gauss_fitting(kinetics_data['log10 Rate Constant'])
+    x_vals = np.linspace(-5, -1, 1000)
+    kd1_gauss = norm.pdf(x_vals, mu1, sigma1) * 70
+
+    mu2, sigma2, fwhm2 = gauss_fitting(kinetics_data_2['log10 Rate Constant'])
+    kd2_gauss = norm.pdf(x_vals, mu2, sigma2) * 30
+
     observations = kinetics_data['log10 Rate Constant'].count()
     bin_num = sturges_rule(observations)
-    plotting(kinetics_data, kinetics_data_2, bin_num)
+    plotting(kinetics_data, kinetics_data_2, x_vals, kd1_gauss, kd2_gauss, bin_num)
 
 
 def sturges_rule(observations):
@@ -20,10 +29,21 @@ def sturges_rule(observations):
     return bin_num
 
 
-def plotting(data, data2, bin_num):
+def gauss_fitting(spread):
+    mu, sigma = norm.fit(spread)
+    fwhm = 2.355 * sigma
+    return mu, sigma, fwhm
+
+
+def plotting(data, data2, gauss1x, gauss1y, gauss2y, bin_num):
     fig, ax = plt.subplots()
-    ax.hist(data['log10 Rate Constant'], bin_num, edgecolor='royalblue', color='dodgerblue')
-    ax.hist(data2['log10 Rate Constant'], bin_num, edgecolor='firebrick', color='red')
+    ax.hist(data['log10 Rate Constant'], edgecolor='royalblue', color='dodgerblue', label='rr-P3HT')
+    ax.plot(gauss1x, gauss1y, color='darkslategray')
+    ax.hist(data2['log10 Rate Constant'], bin_num, edgecolor='firebrick', color='red', label='PBTTT')
+    ax.plot(gauss1x, gauss2y, color='darkred')
+    ax.set_xlabel('log$_{10}$ $k_{0}$')
+    ax.set_ylabel('Counts')
+    plt.legend()
     plt.show()
 
 
