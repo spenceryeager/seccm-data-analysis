@@ -9,12 +9,11 @@ import os
 
 
 def main():
-    directory = r"D:\Research\SPECS-Project\2023\24Mar2023_P3HT-with-Fc\scan"
-    save_dir = r"D:\Research\SPECS-Project\2023\24Mar2023_P3HT-with-Fc\analysis_folder"
+    directory = r"C:\Users\Spencer\Documents\data-analysis\24Mar2023_P3HT-with-Fc\scan"
+    save_dir = r"C:\Users\Spencer\Documents\data-analysis\24Mar2023_P3HT-with-Fc\analysis"
     save_name = 'results_with_bounds.csv'
     settings_name = "settings.txt"
-    filelist = os.listdir(directory)
-    # print(filelist)
+    filelist = file_sort(directory)
     linear_region = [0.24, 0.25] # Defining start and end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
     id_potential = 0.24 # V, potential where diffusion-limited current is observed
@@ -22,7 +21,7 @@ def main():
     tip_radius = 2 * (10 **-5) #cm
     potential_range = [0.6, 0.2] # V!
     sweep_number = 2
-    kinetics_df = pd.DataFrame(columns = ['Half Potential (V)', 'Rate Constant (cm/s)', 'log10 Rate Constant', "Transfer Coefficient", "Transfer Coefficient Error", "KappaNaught", "KappaNaught Error"])
+    kinetics_df = pd.DataFrame(columns = ['Half Potential (V)', 'Rate Constant (cm/s)', 'log10 Rate Constant', "Transfer Coefficient", "Transfer Coefficient Error", "KappaNaught", "KappaNaught Error", "X (um)", "Y (um)"])
     half_potential_list = []
     rate_constant_list = []
     transfer_coef_list = []
@@ -55,6 +54,18 @@ def main():
     kinetics_df['KappaNaught Error'] = kappa_naught_error_list
     
     kinetics_df.to_csv(os.path.join(save_dir, save_name))
+
+
+def file_sort(dir_path):
+    data_list = []
+    for item in os.listdir(dir_path):
+        if item.endswith('.csv'):
+            data_list.append(item)
+    sorted_file_list = sorted(data_list, key=lambda x: [[int(x.split("_")[1][:-1])], [int(x.split("_")[0][:-1])]])
+    # the above is a mouthful. This is sorting based on the X and Y value. lambda x here can be thought of as the item in the list. it is then split at the "_"
+    # since this is the separator between the numbers. Indices 0 and 1 are the "numX" and "numY", the [:-1] removes the "X" and "Y" from the string. It's all
+    # then converted to an int.
+    return sorted_file_list
 
 
 if __name__ == "__main__":
