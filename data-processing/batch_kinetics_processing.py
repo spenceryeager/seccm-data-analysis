@@ -9,9 +9,9 @@ import os
 
 
 def main():
-    directory = r"C:\Users\Spencer\Documents\data-analysis\24Mar2023_P3HT-with-Fc\scan"
-    save_dir = r"C:\Users\Spencer\Documents\data-analysis\24Mar2023_P3HT-with-Fc\analysis"
-    save_name = 'results_with_bounds.csv'
+    directory = r"C:\Users\Spencer\Documents\data-analysis\28Mar2023_PBTTT_Fc\scan"
+    save_dir = r"C:\Users\Spencer\Documents\data-analysis\28Mar2023_PBTTT_Fc\analysis"
+    save_name = 'results_with_bounds_pbttt.csv'
     settings_name = "settings.txt"
     filelist = file_sort(directory)
     linear_region = [0.24, 0.25] # Defining start and end of linear region for background correction
@@ -28,11 +28,17 @@ def main():
     transfer_coef_error_list = []
     kappa_naught_list = []
     kappa_naught_error_list = []
+    x_list = []
+    y_list = []
 
     for filename in filelist:
 
         if os.path.isfile(os.path.join(directory,filename)):
-
+            split_name = filename.split('_')
+            xvals = split_name[0].split("X")
+            yvals = split_name[1].split("Y")
+            x_list.append(int(xvals[0]))
+            y_list.append(int(yvals[0]))
             data_path = os.path.join(directory,filename)
             rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=False)
             half_potential_list.append(ehalf)
@@ -52,6 +58,8 @@ def main():
     kinetics_df['Transfer Coefficient Error'] = transfer_coef_error_list
     kinetics_df['KappaNaught'] = kappa_naught_list
     kinetics_df['KappaNaught Error'] = kappa_naught_error_list
+    kinetics_df['X (um)'] = x_list
+    kinetics_df['Y (um)'] = y_list
     
     kinetics_df.to_csv(os.path.join(save_dir, save_name))
 
