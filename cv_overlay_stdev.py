@@ -43,18 +43,26 @@ def make_plot():
             cv_count += 1
             data = pd.read_csv(os.path.join(directory, file), sep='\t') # loading in data
             second_sweep = int(len(data) / sweep_numbers) # getting length of data file to remove first sweep
+            second_sweep = second_sweep * 2
             if cv_count == 1:
                 current_list.append(data[i][second_sweep:].to_numpy())
                 potentials = data[v][second_sweep:].to_numpy()
             else:
-                current_list.append((data[i][second_sweep+2:].to_numpy()))
+                current_list.append((data[i][second_sweep:].to_numpy()))
             # ax.plot(data[v][second_sweep:] * -1, data[i][second_sweep:], color='dodgerblue', alpha=0.05, linewidth=7)
     avg_current = np.average(current_list, axis=0)
     std_current = np.std(current_list, axis=0)
     print(std_current)
+    upper_bound = avg_current + std_current
+    lower_bound = avg_current - std_current
+    print(avg_current)
+    print(upper_bound)
     # print(potentials)
-    ax.fill_between(np.negative(potentials), y1 = (avg_current + std_current), y2 = (avg_current - std_current), color='red', alpha=0.4)
     ax.plot(np.negative(potentials), avg_current, color='red', linewidth=7)
+    ax.fill_between(np.negative(potentials), y1 = (avg_current + std_current), y2 = (avg_current - std_current), color='red', linewidth=7, alpha=0.4, interpolate=True)
+
+
+    # ax.plot(np.negative(potentials), (avg_current - std_current), color='black')
 
     # Formatting plot
     ax.invert_xaxis()
