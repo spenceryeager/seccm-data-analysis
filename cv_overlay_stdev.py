@@ -51,6 +51,7 @@ def make_plot():
                 current_list.append((data[i][second_sweep:].to_numpy()))
             # ax.plot(data[v][second_sweep:] * -1, data[i][second_sweep:], color='dodgerblue', alpha=0.05, linewidth=7)
     avg_current = np.average(current_list, axis=0)
+    avg_current_len = len(avg_current)
     std_current = np.std(current_list, axis=0)
     print(std_current)
     upper_bound = avg_current + std_current
@@ -58,8 +59,8 @@ def make_plot():
     print(avg_current)
     print(upper_bound)
     # print(potentials)
-    ax.plot(np.negative(potentials), avg_current, color='red', linewidth=7)
-    ax.fill_between(np.negative(potentials), y1 = (avg_current + std_current), y2 = (avg_current - std_current), color='red', linewidth=7, alpha=0.4, interpolate=True)
+    ax.plot(np.negative(potentials[:int(avg_current_len/2)]), avg_current[:int(avg_current_len/2)], color='red', linewidth=7)
+    # ax.fill_between(np.negative(potentials), y1 = (avg_current + std_current), y2 = (avg_current - std_current), color='red', linewidth=7, alpha=0.4, interpolate=True)
 
 
     # ax.plot(np.negative(potentials), (avg_current - std_current), color='black')
