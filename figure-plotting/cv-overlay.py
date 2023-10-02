@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import matplotlib as mpl
 from matplotlib import rcParams
 rcParams['font.family'] = 'sans-serif'
 rcParams['font.sans-serif'] = ['Arial']
@@ -18,15 +19,15 @@ def main():
 def make_plot():
     ##############################
     # some parameters to change
-    directory = r'dir'
-    savefig_directory = r"savedir"
-    savefig_name = r"name"
+    directory = r"dir"
+    savefig_directory = r"dir"
+    savefig_name = "name"
     sweep_numbers = 3
     fc_calibration = 0.425
     fc_ev = -4.9
     reference = "Potential (V) vs Fc/Fc$^{+}$"
     ev_axis = False
-    save = False
+    save = True
     ##############################
 
     # Setting font size before making plot
@@ -51,7 +52,7 @@ def make_plot():
             cv_count += 1
             data = pd.read_csv(os.path.join(directory, file), sep='\t') # loading in data
             second_sweep = int(len(data) / sweep_numbers) # getting length of data file to remove first sweep
-            ax.plot(data[v][second_sweep:] - fc_calibration, data[i][second_sweep:] * -1, color='red', alpha=0.05)
+            ax.plot((data[v][second_sweep:] - fc_calibration) * -1, data[i][second_sweep:], color='red', alpha=0.2)
 
 
 
@@ -60,7 +61,7 @@ def make_plot():
     ax.minorticks_on()
     ax.set_xlabel(reference)
     ax.set_ylabel("Current (pA)")
-    ax.legend(['n ='+str(cv_count)], handlelength=0, handletextpad=0)
+    ax.legend(['n ='+str(cv_count)], handlelength=0, handletextpad=0, frameon=False)
 
     ax.xaxis.labelpad = 5
     ax.yaxis.labelpad = 5
