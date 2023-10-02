@@ -17,21 +17,25 @@ def main():
 
 
 def make_plot():
-    # Setting font size before making plot
-    fontsize = 40
-    mpl.rcParams.update({'font.size': fontsize, 'figure.autolayout': True})
-
-    directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\NiOx_Project\2023\09_Sep\25Sep2023_PtButtonCellIodide\Fc_Mini-Scan"
-    file_list = os.listdir(directory)
-    v = 'Voltage (V)'
-    i = 'Current (pA)'
-    
+    ###########################
     # some parameters to change
+    directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\NiOx_Project\2023\09_Sep\25Sep2023_PtButtonCellIodide\Fc_Mini-Scan"
     sweep_numbers = 3
     fc_calibration = 0.0
     fc_ev = -4.9
     reference = "Potential (V) vs Ag Wire"
     ev_axis = False
+    ###########################
+
+    # Setting font size before making plot
+    fontsize = 40
+    mpl.rcParams.update({'font.size': fontsize, 'figure.autolayout': True})
+
+    file_list = os.listdir(directory)
+    v = 'Voltage (V)'
+    i = 'Current (pA)'
+    
+
 
 
     # creating plot
