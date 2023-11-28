@@ -4,6 +4,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
+import matplotlib as mpl
+from matplotlib import rcParams
+rcParams['font.family'] = 'sans-serif'
+rcParams['font.sans-serif'] = ['Arial']
+rcParams['font.weight'] = 'bold'
+rcParams['axes.labelweight'] = 'bold'
+rcParams['savefig.dpi'] = 300
 
 
 def main():
@@ -36,16 +43,26 @@ def gauss_fitting(spread):
 
 
 def plotting(data, data2, gauss1x, gauss1y, gauss2y, bin_num):
-    font = {'size': 14}
-    plt.rc('font', **font)
-    fig, ax = plt.subplots(2)
-    ax[0].hist(data['log10 Rate Constant'], edgecolor='royalblue', color='dodgerblue', label='rr-P3HT')
-    ax[0].plot(gauss1x, gauss1y, color='darkslategray')
-    ax[1].hist(data2['log10 Rate Constant'], bin_num, edgecolor='firebrick', color='red', label='PBTTT')
-    ax[1].plot(gauss1x, gauss2y, color='darkred')
+    fontsize = 40
+    mpl.rcParams.update({'font.size': fontsize, 'figure.autolayout': True})
+    fig, ax = plt.subplots(2, figsize=(14,10), tight_layout=True)
+    plt.rc('font', size=12)
+    ax[0].hist(data['log10 Rate Constant'], edgecolor='royalblue', linewidth=2, color='dodgerblue', label='rr-P3HT')
+    ax[0].plot(gauss1x, gauss1y, color='darkslategray', linewidth=7)
+    ax[1].hist(data2['log10 Rate Constant'], bin_num, edgecolor='firebrick', linewidth=2, color='red', label='PBTTT')
+    ax[1].plot(gauss1x, gauss2y, color='darkred', linewidth=7)
     ax[1].set_xlabel('log$_{10}$ $k_{0}$')
     ax[1].set_ylabel('Counts')
-    plt.legend()
+    for axes in ax:
+        axes.xaxis.labelpad = 5
+        axes.yaxis.labelpad = 5
+        axes.tick_params(axis = 'both', direction='in', which='both', length=18, width=3)
+    
+    
+    for axis in ['top','bottom','left','right']:
+        for axes in ax:
+            axes.spines[axis].set_linewidth(3)
+    # plt.legend()
     plt.show()
 
 
