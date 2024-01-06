@@ -13,11 +13,11 @@ def main():
     font = {'size': 12}
     plt.rc('font', **font)
     # fill this area out first
-    data_directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\SPECS-Project\2023\23May2023_c16_PBTTT\scan"
+    data_directory = r"C:\Users\yeage\Documents\test-seccm-files\scan"
     fc_correction = 0 # how much do we need to adjust the potential based on Fc redox potential?
     sweeps = 3 # how many sweeps are there? this helps with determining sweep cutoffs
     pipette_diameter = 500 # enter this value as nm. It will be converted later
-    film_thickness = 27 # enter as nm. 27 nm is an approximation for now.
+    film_thickness = 300 # enter as nm
     v = 0.1 # V/s, scan rate.
     lin_start = 0.15 # this is the linear region start. This region is used to calculate and correct the background
     lin_end = -0.2 # this is the linear region end. This region is used to calculate and correct the background
@@ -26,15 +26,26 @@ def main():
 
     file_list = []
     sorted_file_list = directory_sort(data_directory)
-    dos_array = np.zeros(len(sorted_file_list))
+    dos_list = []
     index = 0
     fig, ax = plt.subplots()
+
+    dos_df = pd.DataFrame()
+    
     for filepath in sorted_file_list:
+        print(filepath)
         dos, data_subset = dos_array_return(filepath, fc_correction, sweeps, pipette_diameter, film_thickness, v, lin_start, lin_end)
-        #  dos_array[index] = dos
+        dos_list.append(dos)
         ax.plot(dos, data_subset['Voltage (V)'] * -1, color='blue', alpha=0.1)
-        index += 1
+        if index == 0:
+            dos_df['Potential (V)'] = data_subset['Voltage (V)']
+            dos_df[str(index)] = pd.Series(dos)
+            index += 1
+        else:
+            dos_df[str(index)] = pd.Series(dos)
+            index += 1
         #  print(data_subset.head())
+    print(dos_df)
     ax.set_xlabel("Density of States (eV$^{-1}$ cm$^{-3}$)")
     ax.set_ylabel("Potential (V) vs. Ag/AgCl")
     ax.invert_yaxis()
