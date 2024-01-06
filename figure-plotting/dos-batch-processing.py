@@ -13,7 +13,9 @@ def main():
     font = {'size': 12}
     plt.rc('font', **font)
     # fill this area out first
-    data_directory = r"C:\Users\yeage\Documents\test-seccm-files\scan"
+    data_directory = r"C:\Users\Spencer\Documents\test-seccm-data\scan"
+    save_data_directory = r"C:\Users\Spencer\Documents\test-seccm-data\dos"
+    save_data_name = "pbttt_c16"
     fc_correction = 0 # how much do we need to adjust the potential based on Fc redox potential?
     sweeps = 3 # how many sweeps are there? this helps with determining sweep cutoffs
     pipette_diameter = 500 # enter this value as nm. It will be converted later
@@ -33,7 +35,6 @@ def main():
     dos_df = pd.DataFrame()
     
     for filepath in sorted_file_list:
-        print(filepath)
         dos, data_subset = dos_array_return(filepath, fc_correction, sweeps, pipette_diameter, film_thickness, v, lin_start, lin_end)
         dos_list.append(dos)
         ax.plot(dos, data_subset['Voltage (V)'] * -1, color='blue', alpha=0.1)
@@ -45,7 +46,24 @@ def main():
             dos_df[str(index)] = pd.Series(dos)
             index += 1
         #  print(data_subset.head())
-    print(dos_df)
+
+    # Creating DOS file + estimation information file
+    dos_df.to_csv(os.path.join(save_data_directory, save_data_name + ".csv"))
+    readme = open(os.path.join(save_data_directory, save_data_name + "_calculation_parameters" ".txt"), 'w')
+    readme.write("Analysis code written by Spencer Yeager, University of Arizona \n")
+    readme.write("Find the source code here: https://github.com/spenceryeager/seccm-data-analysis/blob/main/figure-plotting/dos-batch-processing.py \n")
+    readme.write("Data used: " + data_directory + "\n")
+    readme.write("Parameters used to generate this data: \n")
+    readme.write("Pipette diameter used = " + str(pipette_diameter) +"\n" )
+    readme.write("Film Thickness (nm) = " + str(film_thickness) + "\n")
+    readme.write("Scan rate (V/s) = " + str(v) + "\n")
+    readme.write("Sweeps = " + str(sweeps) + "\n")
+    readme.write("Region used for linear correction (V): " + str(lin_start) + " - " + str(lin_end))
+    readme.close()
+
+
+    # Plotting to ensure everything looks okay
+    ax.set_title("Verify plot looks okay")
     ax.set_xlabel("Density of States (eV$^{-1}$ cm$^{-3}$)")
     ax.set_ylabel("Potential (V) vs. Ag/AgCl")
     ax.invert_yaxis()
