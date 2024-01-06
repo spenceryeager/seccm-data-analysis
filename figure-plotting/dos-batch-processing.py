@@ -12,14 +12,16 @@ def main():
     # Setting font size before making plot
     font = {'size': 12}
     plt.rc('font', **font)
+
     # fill this area out first
-    data_directory = r"C:\Users\Spencer\Documents\test-seccm-data\scan"
-    save_data_directory = r"C:\Users\Spencer\Documents\test-seccm-data\dos"
-    save_data_name = "pbttt_c16"
+    
+    data_directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\GATech-Collab-Static-Disorder-In-Polymers\04Jan2024_115kgP3HT_SECCM\scan"
+    save_data_directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\papers\paper2_GATech_Collab_P3HT-PBTTT\worked_up_data\DOS\p3ht_calculated_DOS\seccm_dos"
+    save_data_name = "p3ht_115kg_nanoscale_dos"
     fc_correction = 0 # how much do we need to adjust the potential based on Fc redox potential?
-    sweeps = 3 # how many sweeps are there? this helps with determining sweep cutoffs
+    sweeps = 2 # how many sweeps are there? this helps with determining sweep cutoffs
     pipette_diameter = 500 # enter this value as nm. It will be converted later
-    film_thickness = 300 # enter as nm
+    film_thickness = 38 # enter as nm
     v = 0.1 # V/s, scan rate.
     lin_start = 0.15 # this is the linear region start. This region is used to calculate and correct the background
     lin_end = -0.2 # this is the linear region end. This region is used to calculate and correct the background
@@ -32,21 +34,20 @@ def main():
     index = 0
     fig, ax = plt.subplots()
 
-    dos_df = pd.DataFrame()
     
     for filepath in sorted_file_list:
         dos, data_subset = dos_array_return(filepath, fc_correction, sweeps, pipette_diameter, film_thickness, v, lin_start, lin_end)
-        dos_list.append(dos)
         ax.plot(dos, data_subset['Voltage (V)'] * -1, color='blue', alpha=0.1)
         if index == 0:
-            dos_df['Potential (V)'] = data_subset['Voltage (V)']
-            dos_df[str(index)] = pd.Series(dos)
+            dos_list.append(data_subset['Voltage (V)'])
+            dos_list.append(dos)
             index += 1
         else:
-            dos_df[str(index)] = pd.Series(dos)
+            dos_list.append(dos)
             index += 1
         #  print(data_subset.head())
 
+    dos_df = pd.DataFrame(dos_list).transpose()
     # Creating DOS file + estimation information file
     dos_df.to_csv(os.path.join(save_data_directory, save_data_name + ".csv"))
     readme = open(os.path.join(save_data_directory, save_data_name + "_calculation_parameters" ".txt"), 'w')
