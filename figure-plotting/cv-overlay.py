@@ -17,6 +17,15 @@ def main():
 
 
 def make_plot():
+    
+    
+    def current_cleanup(current_data):
+        sav_gol = signal.savgol_filter(current_data, 10, 3)
+        gauss_current = ndimage.gaussian_filter1d(sav_gol, 20)
+        cleaned_current = np.negative(gauss_current)
+    return cleaned_current
+
+    
     ##############################
     # some parameters to change
     directory = r"dir"
