@@ -12,12 +12,16 @@ def main():
     # Setting font size before making plot
     font = {'size': 12}
     plt.rc('font', **font)
+
     # fill this area out first
-    data_directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\SPECS-Project\2023\23May2023_c16_PBTTT\scan"
+    
+    data_directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\data\GATech-Collab-Static-Disorder-In-Polymers\04Jan2024_115kgP3HT_SECCM\scan"
+    save_data_directory = r"\\engr-drive.bluecat.arizona.edu\Research\Ratcliff\Spencer Yeager\papers\paper2_GATech_Collab_P3HT-PBTTT\worked_up_data\DOS\p3ht_calculated_DOS\seccm_dos"
+    save_data_name = "p3ht_115kg_nanoscale_dos"
     fc_correction = 0 # how much do we need to adjust the potential based on Fc redox potential?
-    sweeps = 3 # how many sweeps are there? this helps with determining sweep cutoffs
+    sweeps = 2 # how many sweeps are there? this helps with determining sweep cutoffs
     pipette_diameter = 500 # enter this value as nm. It will be converted later
-    film_thickness = 27 # enter as nm. 27 nm is an approximation for now.
+    film_thickness = 38 # enter as nm
     v = 0.1 # V/s, scan rate.
     lin_start = 0.15 # this is the linear region start. This region is used to calculate and correct the background
     lin_end = -0.2 # this is the linear region end. This region is used to calculate and correct the background
@@ -26,15 +30,41 @@ def main():
 
     file_list = []
     sorted_file_list = directory_sort(data_directory)
-    dos_array = np.zeros(len(sorted_file_list))
+    dos_list = []
     index = 0
     fig, ax = plt.subplots()
+
+    
     for filepath in sorted_file_list:
         dos, data_subset = dos_array_return(filepath, fc_correction, sweeps, pipette_diameter, film_thickness, v, lin_start, lin_end)
-        #  dos_array[index] = dos
         ax.plot(dos, data_subset['Voltage (V)'] * -1, color='blue', alpha=0.1)
-        index += 1
+        if index == 0:
+            dos_list.append(data_subset['Voltage (V)'])
+            dos_list.append(dos)
+            index += 1
+        else:
+            dos_list.append(dos)
+            index += 1
         #  print(data_subset.head())
+
+    dos_df = pd.DataFrame(dos_list).transpose()
+    # Creating DOS file + estimation information file
+    dos_df.to_csv(os.path.join(save_data_directory, save_data_name + ".csv"))
+    readme = open(os.path.join(save_data_directory, save_data_name + "_calculation_parameters" ".txt"), 'w')
+    readme.write("Analysis code written by Spencer Yeager, University of Arizona \n")
+    readme.write("Find the source code here: https://github.com/spenceryeager/seccm-data-analysis/blob/main/figure-plotting/dos-batch-processing.py \n")
+    readme.write("Data used: " + data_directory + "\n")
+    readme.write("Parameters used to generate this data: \n")
+    readme.write("Pipette diameter used = " + str(pipette_diameter) +"\n" )
+    readme.write("Film Thickness (nm) = " + str(film_thickness) + "\n")
+    readme.write("Scan rate (V/s) = " + str(v) + "\n")
+    readme.write("Sweeps = " + str(sweeps) + "\n")
+    readme.write("Region used for linear correction (V): " + str(lin_start) + " - " + str(lin_end))
+    readme.close()
+
+
+    # Plotting to ensure everything looks okay
+    ax.set_title("Verify plot looks okay")
     ax.set_xlabel("Density of States (eV$^{-1}$ cm$^{-3}$)")
     ax.set_ylabel("Potential (V) vs. Ag/AgCl")
     ax.invert_yaxis()
