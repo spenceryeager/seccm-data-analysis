@@ -11,15 +11,15 @@ def display_plot():
     font = {'size': 12}
     plt.rc('font', **font)
 
-    fc_redox_correction = 0.5
+    fc_redox_correction = 0.4
 
     # Data loading
-    initial_scan_loc = r"dir"
+    initial_scan_loc = r"R:\Spencer Yeager\data\SPECS-Project\2023\19Mar2023_rrP3HT_500nm-tip\calibration_cv\after_run.csv"
     initial_data = pd.read_csv(initial_scan_loc,
                                 sep = '\t')
-    final_scan_loc = r"dir"
-    final_data = pd.read_csv(final_scan_loc,
-                                sep = '\t')
+    # final_scan_loc = r"dir"
+    # final_data = pd.read_csv(final_scan_loc,
+    #                             sep = '\t')
     v = 'Voltage (V)' # file headers
     i = 'Current (pA)'
 
@@ -27,23 +27,23 @@ def display_plot():
     fig, ax = plt.subplots(figsize=(5, 4))
     ax.plot(initial_data[v], initial_data[i] * -1, 
             color='red', 
-            label='Initial Scan')
+            )
 
-    ax.plot(final_data[v], final_data[i] * -1,
-            color='purple',
-            label='Final Scan')
+    # ax.plot(final_data[v], final_data[i] * -1,
+    #         color='purple',
+    #         label='Final Scan')
     
     # Secondary axis
     ax2 = ax.secondary_xaxis("top", functions=(lambda x: x-fc_redox_correction, lambda x: x+fc_redox_correction))
     ax2.minorticks_on()
 
     # Formatting plot
-    ax.set_xlabel('Potential vs. Ag Wire (V)')
+    ax.set_xlabel('Potential vs. AgCl (V)')
     ax2.set_xlabel('Potential vs. Fc/Fc$^{+}$ (V)')
     ax.set_ylabel('Current (pA)')
     ax.invert_xaxis()
     ax.minorticks_on()
-    ax.legend()
+    # ax.legend()
 
     # display
     plt.tight_layout()
