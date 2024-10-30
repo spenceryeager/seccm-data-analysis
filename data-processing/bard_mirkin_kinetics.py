@@ -18,13 +18,14 @@ from oldham_zoski_sim import sigmoid_maker_curvefit
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    linear_region = [0.24, 0.25] # Defining start and end of linear region for background correction
+    linear_region = [0.25, 0.24] # Defining start and end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
     id_potential = 0.24 # V, potential where diffusion-limited current is observed
     diffusion_coef = 1 * (10 ** -6) # cm2/s
     tip_radius = 2.5 * (10 **-5) #cm
     potential_range = [0.6, 0.15] # V!
     sweep_number = 2
+    goofy_format = True # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
 
     # working parts of code
     data_path = r"data-processing\sample_file\sample_data.csv"
@@ -32,12 +33,18 @@ def main():
     print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
 
-def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, plotting):
+def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
     data = pd.read_csv(data_path, sep='\t')
-    data['Current (pA)'] *= -1 # converting to US convention. Yuck. IUPAC rules.
+
+    # This is an important part to consider when updating data output from the SECCM.
+    if goofy_format:
+        data['Voltage (V)'] *= -1
+    else:
+        data['Current (pA)'] *= -1
+
     loc1 = data.loc[data['Voltage (V)'] == potential_range[0]].index   
     loc2 = data.loc[data['Voltage (V)'] == potential_range[1]].index
-    
+
     if loc1[sweep] < loc2[sweep]:
         data = data[loc1[sweep]:loc2[sweep]]
     else:
