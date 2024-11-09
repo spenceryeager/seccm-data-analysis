@@ -9,10 +9,10 @@ import os
 
 
 def main():
-    directory = r"C:\Users\Spencer\Documents\data-analysis\28Mar2023_PBTTT_Fc\scan"
-    save_dir = r"C:\Users\Spencer\Documents\data-analysis\28Mar2023_PBTTT_Fc\analysis"
+    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\31Oct2024_PBTTT_Fc1\scan"
+    save_dir = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_rates\P3HT"
     save_name = 'results_with_bounds_pbttt.csv'
-    settings_name = "settings.txt"
+    settings_name = "settings2.txt"
     filelist = file_sort(directory)
     linear_region = [0.24, 0.25] # Defining start and end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
@@ -40,7 +40,7 @@ def main():
             x_list.append(int(xvals[0]))
             y_list.append(int(yvals[0]))
             data_path = os.path.join(directory,filename)
-            rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=False)
+            rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format=True, plotting=False)
             half_potential_list.append(ehalf)
             rate_constant_list.append(rate_constant)
             transfer_coef_list.append(transfer_coef)

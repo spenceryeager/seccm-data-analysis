@@ -86,6 +86,7 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
         make_plot(data, approximation_currents, q, h, tq, fit_success)
     else:
         print("Analysizing next CV")
+        print(data_path)
 
     return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, h
 
