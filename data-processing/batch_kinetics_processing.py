@@ -9,9 +9,9 @@ import os
 
 
 def main():
-    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\31Oct2024_PBTTT_Fc1\scan"
-    save_dir = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_rates\P3HT"
-    save_name = 'results_with_bounds_pbttt.csv'
+    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\29Oct2024_P3HT_Fc\scan"
+    save_dir = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\29Oct2024_P3HT_Fc\test"
+    save_name = 'results_with_bounds_p3ht.csv'
     settings_name = "settings2.txt"
     filelist = file_sort(directory)
     linear_region = [0.24, 0.25] # Defining start and end of linear region for background correction
@@ -21,6 +21,9 @@ def main():
     tip_radius = 2 * (10 **-5) #cm
     potential_range = [0.6, 0.2] # V!
     sweep_number = 2
+    
+    save_settings(save_dir, settings_name, directory, linear_region, formal_potential, id_potential, diffusion_coef, tip_radius, potential_range, sweep_number)
+
     kinetics_df = pd.DataFrame(columns = ['Half Potential (V)', 'Rate Constant (cm/s)', 'log10 Rate Constant', "Transfer Coefficient", "Transfer Coefficient Error", "KappaNaught", "KappaNaught Error", "X (um)", "Y (um)"])
     half_potential_list = []
     rate_constant_list = []
@@ -75,6 +78,30 @@ def file_sort(dir_path):
     # then converted to an int.
     return sorted_file_list
 
+
+def save_settings(save_dir, settings_name, directory, linear_region, formal_potential, id_potential, diffusion_coef, tip_radius, potential_range, sweep_number):
+    settings_file = os.path.join(save_dir, settings_name)
+    print(settings_file)
+    with open(settings_file, "wt", encoding="utf-8") as file:
+        file.write("These settings can be used to replicate the data processing conditions. Input them in the exact location on the batch_kinetics_processing.py file")
+        file.write('\n')
+        file.write('\n')
+        file.write("Data used: " + directory)
+        file.write('\n')
+        file.write('Linear region selected for background correction: linear_region = '+ str(linear_region))
+        file.write('\n')
+        file.write('Formal potential of redox probe: formal_potential = ' + str(formal_potential))
+        file.write('\n')
+        file.write('Location where diffusion limited current occurs: id_potential = ' + str(id_potential))
+        file.write('\n')
+        file.write('Diffusion coefficient used: diffusion_coef = '+ str(diffusion_coef))
+        file.write('\n')
+        file.write('Tip radius used: tip_radius = ' + str(tip_radius))
+        file.write('\n')
+        file.write('Potential range to select the voltammogram from: potential_range = '+ str(potential_range))
+        file.write('\n')
+        file.write('Sweep number used: sweep_number = ' + str(sweep_number))
+        file.close()
 
 if __name__ == "__main__":
     main()

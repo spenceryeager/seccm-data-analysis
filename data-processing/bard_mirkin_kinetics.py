@@ -162,10 +162,18 @@ def current_quartiles(data):
     half_quart = 0.5
     three_quarter_quart = 0.75 # explanation for this at top of script
     quarter_quart = 0.25 # explanation for this at top of script
-    half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
-    quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
-    three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
-    return(half_loc, quarter_loc, three_quarter_loc)
+    try:
+        half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
+        quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
+        three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
+        return(half_loc, quarter_loc, three_quarter_loc)
+    except IndexError:
+        half_loc = np.nan
+        quarter_loc = np.nan
+        three_quarter_loc = np.nan
+        return(half_loc, quarter_loc, three_quarter_loc)
+
+
 
 
 # all below is not necessary anymore. This approximation was not written for semiconductors and was also formulated for UMEs.
