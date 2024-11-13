@@ -26,5 +26,10 @@ def main():
     hist_vals.to_csv(savefile)
 
 
+def sturges(count):
+    bins = int(np.ceil(np.log2(count) + 1))
+    return bins
+
+
 if "__name__" == __main__:
     main()
