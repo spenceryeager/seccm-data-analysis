@@ -7,6 +7,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os
 import scipy.signal as signal
 import scipy.ndimage as ndimage
 import scipy.constants as constant
@@ -18,22 +19,22 @@ from oldham_zoski_sim import sigmoid_maker_curvefit
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    linear_region = [0.25, 0.24] # Defining start and end of linear region for background correction
+    linear_region = [0.04, 0.0] # Defining start and end of linear region for background correction
     formal_potential = 0.4 # V, formal redox potential of probe
-    id_potential = 0.24 # V, potential where diffusion-limited current is observed
+    id_potential = 0.0 # V, potential where diffusion-limited current is observed
     diffusion_coef = 1 * (10 ** -6) # cm2/s
     tip_radius = 2.5 * (10 **-5) #cm
-    potential_range = [0.6, 0.15] # V!
+    potential_range = [0.6, -0.1] # V!
     sweep_number = 2
     goofy_format = True # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
 
     # working parts of code
-    data_path = r"data-processing\sample_file\sample_data.csv"
-    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, plotting=True)
+    data_path = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\01Nov2024_PBTTT_Fc3\scan\0X_0Y_fc_pbttt.csv"
+    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True)
     print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
 
-def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
+def get_kinetics(data_path, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
     data = pd.read_csv(data_path, sep='\t')
 
     # This is an important part to consider when updating data output from the SECCM.
@@ -61,8 +62,8 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
 
     try:
         # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.4), data['Normalized Current (pA)'], bounds=([-np.inf, 0],[20,1])) # adding bounds
-        parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.5), data['Normalized Current (pA)'])
-        approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - 0.5), parameters[0], parameters[1])
+        parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
+        approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - formal_potential), parameters[0], parameters[1])
         kappa_naught = parameters[0]
         transfer_coef = parameters[1]
         error_in_fits = np.sqrt(np.diag(covariance))
@@ -70,6 +71,16 @@ def get_kinetics(data_path, linear_region, potential_range, sweep, diffusion_cur
         transfer_coef_error = error_in_fits[1]
         rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
         fit_success = True
+
+        ## This section is for saving a particular data set to a CSV file to show the fitting procedure in a conference or something
+        
+        # save_df = data
+        # save_df['Fit Current'] = approximation_currents
+        # save_directory = r"dir"
+        # save_name = r"name"
+        # save_df.to_csv(os.path.join(save_directory,(save_name + ".csv")))
+
+
     except RuntimeError:
         "Fit failed."
         kappa_naught = np.nan
