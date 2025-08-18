@@ -19,23 +19,33 @@ from oldham_zoski_sim import sigmoid_maker_curvefit
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    linear_region = [0.04, 0.0] # Defining start and end of linear region for background correction
-    formal_potential = 0.4 # V, formal redox potential of probe
-    id_potential = 0.0 # V, potential where diffusion-limited current is observed
-    diffusion_coef = 1 * (10 ** -6) # cm2/s
-    tip_radius = 2.5 * (10 **-5) #cm
-    potential_range = [0.6, -0.1] # V!
-    sweep_number = 2
+    linear_region = [0.16, 0.10] # Defining start and end of linear region for background correction
+    formal_potential = 0.31 # V, formal redox potential of probe
+    id_potential = 0.15 # V, potential where diffusion-limited current is observed
+    diffusion_coef = 4.1 * (10 ** -6) # cm2/s
+    tip_radius = 2.7 * (10 **-5) #cm
+    potential_range = [0, 0.4] # V!
+    sweep_number = 1
+    sweeps = 1
     goofy_format = True # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
 
     # working parts of code
-    data_path = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\01Nov2024_PBTTT_Fc3\scan\0X_0Y_fc_pbttt.csv"
-    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data_path, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True)
+    data_path = r"E:\RDrive_Backup\Spencer Yeager\papers\paper3_pbttt_annealing_kinetics\data\SECCM\06Feb2025_Nanoribbon\scan2\0X_0Y_nanoribbon.csv"
+
+    data = pd.read_csv(data_path, sep='\t')
+    len_data = len(data)
+    cycle_subset = int(len_data / sweeps)
+    data_ox_cycle = int(cycle_subset / 2)
+    data_subset = data[data_ox_cycle : data_ox_cycle*2].reset_index()
+
+
+    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data=data_subset, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True)
+    print('ehalf','rate_constant', 'kappa_naught', "kappa naught error","transfer coef", "transfer coef error")
     print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
 
-def get_kinetics(data_path, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
-    data = pd.read_csv(data_path, sep='\t')
+def get_kinetics(data, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
+    # data = pd.read_csv(data_path, sep='\t')
 
     # This is an important part to consider when updating data output from the SECCM.
     if goofy_format:
@@ -46,10 +56,10 @@ def get_kinetics(data_path, formal_potential, linear_region, potential_range, sw
     loc1 = data.loc[data['Voltage (V)'] == potential_range[0]].index   
     loc2 = data.loc[data['Voltage (V)'] == potential_range[1]].index
 
-    if loc1[sweep] < loc2[sweep]:
-        data = data[loc1[sweep]:loc2[sweep]]
+    if loc1[0] < loc2[0]:
+        data = data[loc1[0]:loc2[0]]
     else:
-        data = data[loc2[sweep]:loc1[sweep]]
+        data = data[loc2[0]:loc1[0]]
 
     cleaned_current = current_cleanup(data['Current (pA)'])
     corrected_current = background_correction(data, cleaned_current, linear_region[0], linear_region[1]) # deprecated way of correcting current. Skews the trend in my opinion.
@@ -62,8 +72,10 @@ def get_kinetics(data_path, formal_potential, linear_region, potential_range, sw
 
     try:
         # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.4), data['Normalized Current (pA)'], bounds=([-np.inf, 0],[20,1])) # adding bounds
+        # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
+        # approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - formal_potential), parameters[0], parameters[1])
         parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
-        approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - formal_potential), parameters[0], parameters[1])
+        approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)']- formal_potential), parameters[0], parameters[1])
         kappa_naught = parameters[0]
         transfer_coef = parameters[1]
         error_in_fits = np.sqrt(np.diag(covariance))
@@ -97,7 +109,6 @@ def get_kinetics(data_path, formal_potential, linear_region, potential_range, sw
         make_plot(data, approximation_currents, q, h, tq, fit_success)
     else:
         print("Analysizing next CV")
-        print(data_path)
 
     return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, h
 

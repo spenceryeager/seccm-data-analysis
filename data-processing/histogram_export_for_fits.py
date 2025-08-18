@@ -1,14 +1,16 @@
 import pandas as pd
 import numpy as np
+import os
 
 def main():
 
-    hist_data = pd.read_csv(r"sample")
-    column = "sample_column"
-    savefile = "save dir"
+    hist_data = pd.read_csv(r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\PBTTT\results_with_bounds_pbttt.csv")
+    column = "log10 Rate Constant"
+    savedir = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\PBTTT"
+    savename = "pbttt_histogram_for_fit.csv"
 
     bincount = sturges(len(hist_data[column]))
-    hist_data_array, bin_locations = np.histogram(np.negative(hist_data[column]), bins=bincount)
+    hist_data_array, bin_locations = np.histogram((hist_data[column]), bins=bincount)
 
     midpoints = []
 
@@ -23,7 +25,7 @@ def main():
     hist_vals = pd.DataFrame(fit_data)
 
 
-    hist_vals.to_csv(savefile)
+    hist_vals.to_csv(os.path.join(savedir,savename))
 
 
 def sturges(count):
@@ -31,5 +33,5 @@ def sturges(count):
     return bins
 
 
-if "__name__" == __main__:
+if __name__ == "__main__":
     main()

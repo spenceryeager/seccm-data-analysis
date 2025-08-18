@@ -6,9 +6,9 @@ import numpy as np
 
 
 def main():
-    filepath = r"C:\Users\Spencer\Documents\data-analysis\28Mar2023_PBTTT_Fc\analysis\results_with_bounds_pbttt.csv"
+    filepath = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\PBTTT\results_with_bounds_pbttt.csv"
     data_file = pd.read_csv(filepath)
-    print(data_file)
+    # print(data_file)
 
     unique_x = list(set(data_file['X (um)']))
     unique_y = list(set(data_file['Y (um)']))
@@ -22,7 +22,7 @@ def make_plot(X, Y, Z_current):
     font = {'size': 18}
     plt.rc('font', **font)
     fig, ax = plt.subplots(tight_layout=True)
-    im = ax.pcolormesh(X, Y, Z_current,vmin=-4, vmax=-2)
+    im = ax.pcolormesh(X, Y, Z_current,vmin=-1.4, vmax=-0.4)
     ax.set_xlabel('X ($\\rm\mu$m)')
     ax.set_ylabel('Y ($\\rm\mu$m)')
     cb = fig.colorbar(im, ax=ax)
