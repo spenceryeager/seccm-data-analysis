@@ -26,15 +26,16 @@ def fit_data():
     fit = False
     reference_label = "Potential (V) vs. Ag Wire"
 
-    data_file = r"R:\Spencer Yeager\data\NiOx_Project\2023\09_Sep\20Sep2023_ButtonPtCel\approach_fc\approach.csv"
+    data_file = r"E:\RDrive_Backup\Spencer Yeager\papers\paper3_pbttt_annealing_kinetics\data\SECCM\06Feb2025_Nanoribbon\calibration\after.csv"
     save_dir = r"R:\Spencer Yeager\data\NiOx_Project\2023\09_Sep\20Sep2023_ButtonPtCel\figures"
     save_name = "fc_approach.svg"
     data_read = pd.read_csv(data_file, sep='\t')
+    
 
     # removing the first approach scan by dividing the length by # of sweeps and starting after the first sweep
-    sweeps = 3
+    sweeps = 2
     sweep_intervals = int(len(data_read) / sweeps)
-    data_subset = data_read[sweep_intervals:]
+    data_subset = data_read[sweep_intervals:sweep_intervals*2]
     
     fontsize = 40
     mpl.rcParams.update({'font.size': fontsize, 'figure.autolayout': True})
@@ -58,7 +59,7 @@ def fit_data():
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(3)
     
-    plt.savefig(os.path.join(save_dir, save_name))
+    # plt.savefig(os.path.join(save_dir, save_name))
     plt.show()
 
 
