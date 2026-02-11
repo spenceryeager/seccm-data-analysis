@@ -19,18 +19,19 @@ from oldham_zoski_sim import sigmoid_maker_curvefit
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    linear_region = [0.16, 0.10] # Defining start and end of linear region for background correction
+    linear_region = [0.26, 0.25] # Defining start and end of linear region for background correction
     formal_potential = 0.31 # V, formal redox potential of probe
-    id_potential = 0.15 # V, potential where diffusion-limited current is observed
+    id_potential = 0.26 # V, potential where diffusion-limited current is observed
     diffusion_coef = 4.1 * (10 ** -6) # cm2/s
     tip_radius = 2.7 * (10 **-5) #cm
-    potential_range = [0, 0.4] # V!
+    potential_range = [0.6, 0.25] # V!
     sweep_number = 1
     sweeps = 1
-    goofy_format = True # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
-
+    ox_to_red_event = False # Are you trying to 
+    goofy_format = False # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
+    plotting = True
     # working parts of code
-    data_path = r"E:\RDrive_Backup\Spencer Yeager\papers\paper3_pbttt_annealing_kinetics\data\SECCM\06Feb2025_Nanoribbon\scan2\0X_0Y_nanoribbon.csv"
+    data_path = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan\0X_0Y_pbttt_fc.csv"
 
     data = pd.read_csv(data_path, sep='\t')
     len_data = len(data)
@@ -39,13 +40,17 @@ def main():
     data_subset = data[data_ox_cycle : data_ox_cycle*2].reset_index()
 
 
-    rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data=data_subset, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True)
-    print('ehalf','rate_constant', 'kappa_naught', "kappa naught error","transfer coef", "transfer coef error")
-    print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
+    h, q, tq = get_kinetics(data_loadin=data_subset, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True, redox_event=ox_to_red_event)
+    # print('ehalf','rate_constant', 'kappa_naught', "kappa naught error","transfer coef", "transfer coef error")
+    # print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
+
+    print((abs(q - h)))
+    print((abs(h - tq)))
 
 
-def get_kinetics(data, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
+def get_kinetics(data_loadin, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting, redox_event):
     # data = pd.read_csv(data_path, sep='\t')
+    data = data_loadin.copy() # doing this to avoid errors
 
     # This is an important part to consider when updating data output from the SECCM.
     if goofy_format:
@@ -62,58 +67,96 @@ def get_kinetics(data, formal_potential, linear_region, potential_range, sweep, 
         data = data[loc2[0]:loc1[0]]
 
     cleaned_current = current_cleanup(data['Current (pA)'])
-    corrected_current = background_correction(data, cleaned_current, linear_region[0], linear_region[1]) # deprecated way of correcting current. Skews the trend in my opinion.
+    corrected_current = background_correction(data, cleaned_current, linear_region[0], linear_region[1])
     corrected_current = background_zero(corrected_current)
     data['Zeroed Current (pA)'] = corrected_current
     data = data.reset_index(drop=True)
     data = get_id(diffusion_current_potential, data)
-    h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
-    # e = data['Voltage (V)']
-
-    try:
-        # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.4), data['Normalized Current (pA)'], bounds=([-np.inf, 0],[20,1])) # adding bounds
-        # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
-        # approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - formal_potential), parameters[0], parameters[1])
-        parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
-        approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)']- formal_potential), parameters[0], parameters[1])
-        kappa_naught = parameters[0]
-        transfer_coef = parameters[1]
-        error_in_fits = np.sqrt(np.diag(covariance))
-        kappa_naught_error = error_in_fits[0]
-        transfer_coef_error = error_in_fits[1]
-        rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
-        fit_success = True
-
-        ## This section is for saving a particular data set to a CSV file to show the fitting procedure in a conference or something
-        
-        # save_df = data
-        # save_df['Fit Current'] = approximation_currents
-        # save_directory = r"dir"
-        # save_name = r"name"
-        # save_df.to_csv(os.path.join(save_directory,(save_name + ".csv")))
+    h, q, tq = current_quartiles(data, redox_event) # q, h, tq = quarter, half, threequarter potentials
 
 
-    except RuntimeError:
-        "Fit failed."
-        kappa_naught = np.nan
-        transfer_coef = np.nan
-        error_in_fits = np.nan
-        kappa_naught_error = np.nan
-        transfer_coef_error = np.nan
-        rate_constant = np.nan
-        approximation_currents = 0
-        fit_success = False
-
-    
     if plotting:
-        make_plot(data, approximation_currents, q, h, tq, fit_success)
+        make_plot(data, q, h, tq)
     else:
         print("Analysizing next CV")
+    
+    # Rounding the quartiles
+    h = rounding(h)
+    q = rounding(q)
+    tq = rounding(tq)
+    return h, q, tq
 
-    return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, h
+
+# def get_kinetics(data, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting):
+#     # data = pd.read_csv(data_path, sep='\t')
+
+#     # This is an important part to consider when updating data output from the SECCM.
+#     if goofy_format:
+#         data['Voltage (V)'] *= -1
+#     else:
+#         data['Current (pA)'] *= -1
+
+#     loc1 = data.loc[data['Voltage (V)'] == potential_range[0]].index   
+#     loc2 = data.loc[data['Voltage (V)'] == potential_range[1]].index
+
+#     if loc1[0] < loc2[0]:
+#         data = data[loc1[0]:loc2[0]]
+#     else:
+#         data = data[loc2[0]:loc1[0]]
+
+#     cleaned_current = current_cleanup(data['Current (pA)'])
+#     corrected_current = background_correction(data, cleaned_current, linear_region[0], linear_region[1]) # deprecated way of correcting current. Skews the trend in my opinion.
+#     corrected_current = background_zero(corrected_current)
+#     data['Zeroed Current (pA)'] = corrected_current
+#     data = data.reset_index(drop=True)
+#     data = get_id(diffusion_current_potential, data)
+#     h, q, tq = current_quartiles(data) # q, h, tq = quarter, half, threequarter potentials
+#     # e = data['Voltage (V)']
+
+#     try:
+#         # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - 0.4), data['Normalized Current (pA)'], bounds=([-np.inf, 0],[20,1])) # adding bounds
+#         # parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
+#         # approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)'] - formal_potential), parameters[0], parameters[1])
+#         parameters, covariance = curve_fit(sigmoid_maker_curvefit, (data['Voltage (V)'] - formal_potential), data['Normalized Current (pA)'])
+#         approximation_currents = sigmoid_maker_curvefit((data['Voltage (V)']- formal_potential), parameters[0], parameters[1])
+#         kappa_naught = parameters[0]
+#         transfer_coef = parameters[1]
+#         error_in_fits = np.sqrt(np.diag(covariance))
+#         kappa_naught_error = error_in_fits[0]
+#         transfer_coef_error = error_in_fits[1]
+#         rate_constant = get_rate_constant(diffusion_coefficient, tip_radius, kappa_naught)
+#         fit_success = True
+
+#         ## This section is for saving a particular data set to a CSV file to show the fitting procedure in a          conference or something
+        
+#         # save_df = data
+#         # save_df['Fit Current'] = approximation_currents
+#         # save_directory = r"dir"
+#         # save_name = r"name"
+#         # save_df.to_csv(os.path.join(save_directory,(save_name + ".csv")))
+
+
+#     except RuntimeError:
+#         "Fit failed."
+#         kappa_naught = np.nan
+#         transfer_coef = np.nan
+#         error_in_fits = np.nan
+#         kappa_naught_error = np.nan
+#         transfer_coef_error = np.nan
+#         rate_constant = np.nan
+#         approximation_currents = 0
+#         fit_success = False
 
     
-def make_plot(data, approximation_currents, q, h, tq, fit_success):
+#     if plotting:
+#         make_plot(data, approximation_currents, q, h, tq, fit_success)
+#     else:
+#         print("Analysizing next CV")
+
+#     return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, h
+
+    
+def make_plot(data, q, h, tq):
     plt.rcParams['font.size'] = 14
     fig, ax = plt.subplots()
     # ax.plot(data['Voltage (V)'], data['Current (pA)'], color='purple', label='Raw')
@@ -122,12 +165,12 @@ def make_plot(data, approximation_currents, q, h, tq, fit_success):
 
     ax.plot(data['Voltage (V)'], data['Normalized Current (pA)'], color='purple', label='Normalized')
 
-    if fit_success:
-        ax.plot(data['Voltage (V)'], approximation_currents, color='black', label='Fitted', linestyle='--')
-
-    ax.set_xlabel("Potential (V) vs. AgCl")
+    ax.set_xlabel("Potential (V) vs. Reference")
     ax.set_ylabel("Normalized Current")
-    ax.vlines(x =[q, h, tq], ymin=0, ymax=1, color='black', alpha=0.25)
+    ax.vlines(x = q, ymin=0, ymax=1, color='red', alpha=0.25, label = "1/4 Current")
+    ax.vlines(x = h, ymin=0, ymax=1, color='black', alpha=0.25, label = '1/2 Current')
+    ax.vlines(x = tq, ymin=0, ymax=1, color='blue', alpha=0.25, label= '3/4 Current')
+
     ax.legend(loc = "best", fontsize = 12)
     ax.invert_xaxis()
     plt.show()
@@ -180,48 +223,45 @@ def get_id(id_potential, data):
     return(data)
 
 
-def current_quartiles(data):
-    half_quart = 0.5
-    three_quarter_quart = 0.75 # explanation for this at top of script
-    quarter_quart = 0.25 # explanation for this at top of script
-    try:
-        half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
-        quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
-        three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
-        return(half_loc, quarter_loc, three_quarter_loc)
-    except IndexError:
-        half_loc = np.nan
-        quarter_loc = np.nan
-        three_quarter_loc = np.nan
-        return(half_loc, quarter_loc, three_quarter_loc)
+def rounding(value):
+    value = np.multiply(value, 1000) # conversion to mV
+    double = np.multiply(value, 2)
+    division = np.divide(double, 2)
+    rounded = np.round(division, 1)
+    return rounded
 
+    
+def current_quartiles(data, redox_event):
 
+    if redox_event:
+        half_quart = 0.5
+        three_quarter_quart = 0.75 # why? because this approximation was formed for a reduction event - I want to study oxidation events, so my 3/4 current is essentially inverted
+        quarter_quart = 0.25 # Inverse of explanation in previous comment
+        try:
+            half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
+            quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
+            three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
+            return(half_loc, quarter_loc, three_quarter_loc)
+        except IndexError:
+            half_loc = np.nan
+            quarter_loc = np.nan
+            three_quarter_loc = np.nan
+            return(half_loc, quarter_loc, three_quarter_loc)
 
-
-# all below is not necessary anymore. This approximation was not written for semiconductors and was also formulated for UMEs.
-
-# def alpha_solver(q, h, tq):
-#     # debugging vals below
-#     # q = 0.42
-#     # h = 0.387
-#     # tq = 0.357
-
-#     # this is going to solve Equation 24 in the referenced Mirkin Bard paper.
-#     faraday = constant.physical_constants['Faraday constant'][0]
-#     f = (faraday / (constant.R * 298))
-#     n = 1
-#     epq = np.exp(n * f * ((q-h)))
-#     eptq = np.exp(n * f * ((tq-h)))
-#     func = lambda alpha : (np.power(epq, alpha) * (1 - (3*eptq))) + ((3*np.power(eptq, alpha))*(epq - 3)) + (9*eptq) - (epq)
-#     alpha_initial_guess = 0.5
-#     alpha_solution = fsolve(func, alpha_initial_guess)
-#     print(alpha_solution)
-#     theta_solver(alpha_solution, epq, eptq)
-
-
-# def theta_solver(alpha, epq, eptq):
-#     print('hello')
-
+    else:
+        half_quart = 0.5
+        three_quarter_quart = 0.25 # why? because this approximation was formed for a reduction event - I want to study oxidation events, so my 3/4 current is essentially inverted
+        quarter_quart = 0.75 # Inverse of explanation in previous comment
+        try:
+            half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
+            quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
+            three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
+            return(half_loc, quarter_loc, three_quarter_loc)
+        except IndexError:
+            half_loc = np.nan
+            quarter_loc = np.nan
+            three_quarter_loc = np.nan
+            return(half_loc, quarter_loc, three_quarter_loc)
 
 
 if __name__ == "__main__":

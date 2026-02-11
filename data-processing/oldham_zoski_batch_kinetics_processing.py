@@ -4,7 +4,7 @@
 
 import pandas as pd
 import numpy as np
-from bard_mirkin_kinetics import get_kinetics
+from oldham_zoski_kinetics import get_kinetics
 import os
 
 

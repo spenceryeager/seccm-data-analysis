@@ -26,7 +26,7 @@ def fit_data():
     fit = False
     reference_label = "Potential (V) vs. Ag Wire"
 
-    data_file = r"E:\RDrive_Backup\Spencer Yeager\papers\paper3_pbttt_annealing_kinetics\data\SECCM\06Feb2025_Nanoribbon\calibration\after.csv"
+    data_file = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan\0X_0Y_pbttt_fc.csv"
     save_dir = r"R:\Spencer Yeager\data\NiOx_Project\2023\09_Sep\20Sep2023_ButtonPtCel\figures"
     save_name = "fc_approach.svg"
     data_read = pd.read_csv(data_file, sep='\t')
