@@ -26,26 +26,57 @@ def main():
     tip_radius = 2.7 * (10 **-5) #cm
     potential_range = [0.6, 0.25] # V!
     sweep_number = 1
-    sweeps = 1
+    sweeps = 3
     ox_to_red_event = False # Are you trying to 
     goofy_format = False # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
+    show_precalc_plot = True # This will be used to evaluate what parts of the voltammogram will be used in the kinetics evaluation. 
     plotting = True
     # working parts of code
     data_path = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan\0X_0Y_pbttt_fc.csv"
 
     data = pd.read_csv(data_path, sep='\t')
+
+    data = data_cleanup(data, goofy_format) 
+    data['Cleaned Current (pA)'] = current_cleanup(data['Fixed Current (pA)'])
     len_data = len(data)
     cycle_subset = int(len_data / sweeps)
     data_ox_cycle = int(cycle_subset / 2)
     data_subset = data[data_ox_cycle : data_ox_cycle*2].reset_index()
+    data_subset = data_subset.loc[data_subset['Voltage (V)'].between(potential_range[1], potential_range[0])]
+    
+    zeroed = background_zero(data_subset['Cleaned Current (pA)'])
+    max_current = np.max(zeroed)
+    normalized = zeroed / max_current
+    data_subset['Normalized Current (pA)'] = normalized
 
+    
+    if show_precalc_plot:
+        precalc_plot(data, data_subset, -20, 20)
 
-    h, q, tq = get_kinetics(data_loadin=data_subset, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True, redox_event=ox_to_red_event)
+    h, q, tq = get_kinetics2(data_subset, plotting)
+    print((q - h), "dE1/4")
+    print((h - tq), "dE3/4")
+    print(h)
+
+    # h, q, tq = get_kinetics(data_loadin=data_subset, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True, redox_event=ox_to_red_event)
     # print('ehalf','rate_constant', 'kappa_naught', "kappa naught error","transfer coef", "transfer coef error")
     # print(ehalf, rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error)
 
-    print((abs(q - h)))
-    print((abs(h - tq)))
+
+def get_kinetics2(data_subset, plotting):
+    h, q, tq = current_quartiles(data_subset) # q, h, tq = quarter, half, threequarter potentials
+
+
+    if plotting:
+        make_plot(data_subset, q, h, tq)
+    else:
+        print("Analysizing next CV")
+    
+    # Rounding the quartiles
+    h = rounding(h)
+    q = rounding(q)
+    tq = rounding(tq)
+    return h, q, tq
 
 
 def get_kinetics(data_loadin, formal_potential, linear_region, potential_range, sweep, diffusion_current_potential, diffusion_coefficient, tip_radius, goofy_format, plotting, redox_event):
@@ -155,7 +186,49 @@ def get_kinetics(data_loadin, formal_potential, linear_region, potential_range, 
 
 #     return rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, h
 
+def precalc_plot(data, data_subset, ylim1, ylim2):
+    fig, ax = plt.subplots(1,3, figsize=(10,4))
+    ax[0].set_title('Raw Data')
+    ax[0].plot(data['Voltage (V)'], data['Fixed Current (pA)'], color='black', alpha=0.3)
+    ax[0].plot(data['Voltage (V)'], data['Cleaned Current (pA)'], color='black', alpha=1)
+    ax[0].plot(data_subset['Voltage (V)'], data_subset['Cleaned Current (pA)'], color='red', alpha=1)
     
+    ax[1].set_title('Subset')
+    ax[1].plot(data_subset['Voltage (V)'], data_subset['Cleaned Current (pA)'], color='red', alpha=1)
+
+    ax[2].set_title('Normalized')
+    ax[2].plot(data_subset['Voltage (V)'], data_subset['Normalized Current (pA)'], color='blue', alpha=1)
+
+    ax[0].set_ylim(ylim1, ylim2)
+    ax[0].set_ylabel("Current (pA)")
+    ax[0].set_xlabel('Potential (V)')
+    ax[0].invert_xaxis()
+    ax[1].invert_xaxis()
+    ax[2].invert_xaxis()
+
+
+    ax[0].set_box_aspect(1)
+    ax[1].set_box_aspect(1)
+    ax[2].set_box_aspect(1)
+
+
+    plt.show()
+
+
+def data_cleanup(data, goofy_format):
+    
+    
+    if goofy_format:
+        print('fill in later')
+    
+    
+    else:
+        fixed_current = data['Current (pA)'] * -1
+        data['Fixed Current (pA)'] = fixed_current
+        
+    return data
+
+
 def make_plot(data, q, h, tq):
     plt.rcParams['font.size'] = 14
     fig, ax = plt.subplots()
@@ -231,27 +304,11 @@ def rounding(value):
     return rounded
 
     
-def current_quartiles(data, redox_event):
+def current_quartiles(data):
 
-    if redox_event:
         half_quart = 0.5
         three_quarter_quart = 0.75 # why? because this approximation was formed for a reduction event - I want to study oxidation events, so my 3/4 current is essentially inverted
         quarter_quart = 0.25 # Inverse of explanation in previous comment
-        try:
-            half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
-            quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]
-            three_quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == three_quarter_quart, 'Voltage (V)'].values[0]
-            return(half_loc, quarter_loc, three_quarter_loc)
-        except IndexError:
-            half_loc = np.nan
-            quarter_loc = np.nan
-            three_quarter_loc = np.nan
-            return(half_loc, quarter_loc, three_quarter_loc)
-
-    else:
-        half_quart = 0.5
-        three_quarter_quart = 0.25 # why? because this approximation was formed for a reduction event - I want to study oxidation events, so my 3/4 current is essentially inverted
-        quarter_quart = 0.75 # Inverse of explanation in previous comment
         try:
             half_loc = data.loc[round(data['Normalized Current (pA)'], 2) == half_quart, 'Voltage (V)'].values[0]
             quarter_loc = data.loc[round(data['Normalized Current (pA)'], 2) == quarter_quart, 'Voltage (V)'].values[0]

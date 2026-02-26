@@ -8,18 +8,18 @@ import scipy.constants as constant
 
 def main():
     # constants
-    do = 1 * (10 **-5)
-    dr = 1 * (10 **-5)
+    do = 1 * (9* 10 **-7)
+    dr = 1 * (1 * 10 **-5)
     n = 1
-    eo = 0.4
-    e = np.linspace(-0.2, 0.8, 100)
+    eo = 0.1
+    e = np.linspace(-0.25, 0.6, 100)
     e = e - eo
     ko = 0.003
-    transfer_coef = 0.89
+    transfer_coef = 0.4
     val = sigmoid_maker(do, dr, n, e, ko, transfer_coef)
     fig, ax = plt.subplots()
     ax.plot(e, val)
-    ax.set_xlabel("Potential (V)")
+    ax.set_xlabel("Overpotential (V)")
     ax.set_ylabel("Normalized Current")
     ax.invert_xaxis()
     plt.show()
