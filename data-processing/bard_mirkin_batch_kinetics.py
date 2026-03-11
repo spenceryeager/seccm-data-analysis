@@ -3,7 +3,7 @@
 
 import pandas as pd
 import numpy as np
-from oldham_zoski_kinetics import get_kinetics
+from bard_mirkin_kinetics import get_kinetics2
 import os
 
 
@@ -22,19 +22,22 @@ def main():
     sweep_number = 1
     sweeps = 1
     goofy_format = True # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
+    show_precalc_plot = True # This will be used to evaluate what parts of the voltammogram will be used in the kinetics evaluation. 
     plotting = False
     
     save_settings(save_dir, settings_name, directory, linear_region, formal_potential, id_potential, diffusion_coef, tip_radius, potential_range, sweep_number)
 
-    kinetics_df = pd.DataFrame(columns = ['Half Potential (V)', 'Rate Constant (cm/s)', 'log10 Rate Constant', "Transfer Coefficient", "Transfer Coefficient Error", "KappaNaught", "KappaNaught Error", "X (um)", "Y (um)"])
-    half_potential_list = []
-    rate_constant_list = []
-    transfer_coef_list = []
-    transfer_coef_error_list = []
-    kappa_naught_list = []
-    kappa_naught_error_list = []
-    x_list = []
-    y_list = []
+    # kinetics_df = pd.DataFrame(columns = ['Half Potential (V)', 'Rate Constant (cm/s)', 'log10 Rate Constant', "Transfer Coefficient", "Transfer Coefficient Error", "KappaNaught", "KappaNaught Error", "X (um)", "Y (um)"])
+    # half_potential_list = []
+    # rate_constant_list = []
+    # transfer_coef_list = []
+    # transfer_coef_error_list = []
+    # kappa_naught_list = []
+    # kappa_naught_error_list = []
+    # x_list = []
+    # y_list = []
+
+    kinetics_df = pd.DataFrame(columns=['E1/4 (V)', 'E1/2 (V)', 'E3/4 (V)', 'dE1/4_3/4'])
 
     for filename in filelist:
 
@@ -47,10 +50,22 @@ def main():
             data_path = os.path.join(directory,filename)
             
             data = pd.read_csv(data_path, sep='\t')
+            data = data_cleanup(data, goofy_format) 
+            data['Cleaned Current (pA)'] = current_cleanup(data['Fixed Current (pA)'])
             len_data = len(data)
             cycle_subset = int(len_data / sweeps)
             data_ox_cycle = int(cycle_subset / 2)
             data_subset = data[data_ox_cycle : data_ox_cycle*2].reset_index()
+            data_subset = data_subset.loc[data_subset['Voltage (V)'].between(potential_range[1], potential_range[0])]
+
+            zeroed = background_zero(data_subset['Cleaned Current (pA)'])
+            max_current = np.max(zeroed)
+            normalized = zeroed / max_current
+            data_subset['Normalized Current (pA)'] = normalized
+
+    
+            if show_precalc_plot:
+                precalc_plot(data, data_subset, -20, 20)
 
             rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data=data_subset, formal_potential=formal_potential, linear_region=linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format=goofy_format, plotting=plotting)
 
@@ -88,6 +103,49 @@ def file_sort(dir_path):
     # since this is the separator between the numbers. Indices 0 and 1 are the "numX" and "numY", the [:-1] removes the "X" and "Y" from the string. It's all
     # then converted to an int.
     return sorted_file_list
+
+
+def data_cleanup(data, goofy_format):
+    
+    
+    if goofy_format:
+        print('fill in later')
+    
+    
+    else:
+        fixed_current = data['Current (pA)'] * -1
+        data['Fixed Current (pA)'] = fixed_current
+        
+    return data
+
+
+def precalc_plot(data, data_subset, ylim1, ylim2):
+    fig, ax = plt.subplots(1,3, figsize=(10,4))
+    ax[0].set_title('Raw Data')
+    ax[0].plot(data['Voltage (V)'], data['Fixed Current (pA)'], color='black', alpha=0.3)
+    ax[0].plot(data['Voltage (V)'], data['Cleaned Current (pA)'], color='black', alpha=1)
+    ax[0].plot(data_subset['Voltage (V)'], data_subset['Cleaned Current (pA)'], color='red', alpha=1)
+    
+    ax[1].set_title('Subset')
+    ax[1].plot(data_subset['Voltage (V)'], data_subset['Cleaned Current (pA)'], color='red', alpha=1)
+
+    ax[2].set_title('Normalized')
+    ax[2].plot(data_subset['Voltage (V)'], data_subset['Normalized Current (pA)'], color='blue', alpha=1)
+
+    ax[0].set_ylim(ylim1, ylim2)
+    ax[0].set_ylabel("Current (pA)")
+    ax[0].set_xlabel('Potential (V)')
+    ax[0].invert_xaxis()
+    ax[1].invert_xaxis()
+    ax[2].invert_xaxis()
+
+
+    ax[0].set_box_aspect(1)
+    ax[1].set_box_aspect(1)
+    ax[2].set_box_aspect(1)
+
+
+    plt.show()
 
 
 def save_settings(save_dir, settings_name, directory, linear_region, formal_potential, id_potential, diffusion_coef, tip_radius, potential_range, sweep_number):

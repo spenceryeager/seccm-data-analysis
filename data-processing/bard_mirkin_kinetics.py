@@ -32,7 +32,7 @@ def main():
     show_precalc_plot = True # This will be used to evaluate what parts of the voltammogram will be used in the kinetics evaluation. 
     plotting = True
     # working parts of code
-    data_path = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan\0X_0Y_pbttt_fc.csv"
+    data_path = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan\0X_0Y_pbttt_fc.csv"
 
     data = pd.read_csv(data_path, sep='\t')
 
@@ -56,7 +56,9 @@ def main():
     h, q, tq = get_kinetics2(data_subset, plotting)
     print((q - h), "dE1/4")
     print((h - tq), "dE3/4")
-    print(h)
+    print(q-tq, '(E1/4 - E3/4)')
+    print(h, 'e1/2')
+   
 
     # h, q, tq = get_kinetics(data_loadin=data_subset, formal_potential=formal_potential, linear_region=linear_region,  potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format = goofy_format, plotting=True, redox_event=ox_to_red_event)
     # print('ehalf','rate_constant', 'kappa_naught', "kappa naught error","transfer coef", "transfer coef error")

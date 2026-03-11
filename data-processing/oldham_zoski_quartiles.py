@@ -6,19 +6,25 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 from scipy.optimize import fsolve
+from scipy import constants
 
 
 def main():
     # q = [0.25, 0.5, 0.75]
     # alpha = np.linspace(0, 1, 101)
     # knaught = np.linspace(0.2, 20, 201)
-    q = 0.25
-    alpha = 0.5
+    q = 0.75
+    alpha = 1
     knaught = 1
+    equart(q, h[0])
     h = fsolve(func=lambda h: solve_h(h, knaught, alpha, q), x0=1)
     print(h)
     should_be_zero = np.round(solve_h(h, knaught, alpha, q),0)
     print(should_be_zero)
+    eqmeo = equart(q, h[0])
+    print(eqmeo * 1000)
+
+
 
 
 def solve_h(h, knaught, alpha, q):
@@ -31,7 +37,8 @@ def solve_h(h, knaught, alpha, q):
     fae_term2_denom = ((3* h)*((2*h) + np.pi))
     fae_term2 = np.divide(fae_term2_num, fae_term2_denom)
 
-    fae = (fae_term1 - fae_term2) ** alpha
+    sub_fae = (fae_term1 - fae_term2)
+    fae = np.power(sub_fae, alpha)
 
     # second alpha exponential, sae
     sae_num = 2 * (h + 1)
@@ -44,6 +51,18 @@ def solve_h(h, knaught, alpha, q):
     return (h * fae * sae) - product
     
 
+def equart(q, h):
+    # This is Equation 19 in the linked paper.
+    temp = 298 # K
+    inner_log_frac_num = (2 * q) * (h + 1)
+    inner_log_frac_denom = (3 * h) * ((2 * h) + np.pi)
+    inner_log_frac = np.divide(inner_log_frac_num, inner_log_frac_denom)
+
+    log_term = np.log((q + np.reciprocal(inner_log_frac)) - 1)
+
+    final_val = np.divide((log_term * temp * constants.R), constants.physical_constants['Faraday constant'][0])
+    # this value, according to the paper, is n(E_q - E_o)
+    return final_val
 
 
 
