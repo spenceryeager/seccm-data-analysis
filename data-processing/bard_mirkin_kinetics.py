@@ -75,9 +75,6 @@ def get_kinetics2(data_subset, plotting):
         print("Analysizing next CV")
     
     # Rounding the quartiles
-    h = rounding(h)
-    q = rounding(q)
-    tq = rounding(tq)
     return h, q, tq
 
 

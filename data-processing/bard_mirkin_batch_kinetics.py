@@ -3,25 +3,32 @@
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import scipy.signal as signal
+import scipy.ndimage as ndimage
+import scipy.constants as constant
+import scipy.stats as stats
+from scipy.optimize import fsolve
+from scipy.optimize import curve_fit
 from bard_mirkin_kinetics import get_kinetics2
 import os
 
 
 def main():
-    directory = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan"
-    save_dir = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin"
+    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan"
+    save_dir = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin"
     save_name = 'pbttt_results.csv'
     settings_name = "settings.txt"
     filelist = file_sort(directory)
     linear_region = [0.05, 0.07] # Defining start and end of linear region for background correction
-    formal_potential = 0.22 # V, formal redox potential of probe
+    formal_potential = 0.4 # V, formal redox potential of probe
     id_potential = 0.1 # V, potential where diffusion-limited current is observed
     diffusion_coef = 4.1 * (10 ** -6) # cm2/s
     tip_radius = 2.7 * (10 **-5) #cm
-    potential_range = [0.05, 0.38] # V!
+    potential_range = [0.6, 0.25] # V!
     sweep_number = 1
-    sweeps = 1
-    goofy_format = True # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
+    sweeps = 3
+    goofy_format = False # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
     show_precalc_plot = True # This will be used to evaluate what parts of the voltammogram will be used in the kinetics evaluation. 
     plotting = False
     
@@ -34,11 +41,15 @@ def main():
     # transfer_coef_error_list = []
     # kappa_naught_list = []
     # kappa_naught_error_list = []
-    # x_list = []
-    # y_list = []
+    quarter_potential = []
+    half_potential = []
+    three_quarter_potential = []
+    delta_quarters = []
+    x_list = []
+    y_list = []
 
     kinetics_df = pd.DataFrame(columns=['E1/4 (V)', 'E1/2 (V)', 'E3/4 (V)', 'dE1/4_3/4'])
-
+    
     for filename in filelist:
 
         if os.path.isfile(os.path.join(directory,filename)):
@@ -66,27 +77,33 @@ def main():
     
             if show_precalc_plot:
                 precalc_plot(data, data_subset, -20, 20)
+            
+            show_precalc_plot = False # only show for the first plot
 
-            rate_constant, kappa_naught, kappa_naught_error, transfer_coef, transfer_coef_error, ehalf = get_kinetics(data=data_subset, formal_potential=formal_potential, linear_region=linear_region, potential_range=potential_range, sweep=sweep_number, diffusion_current_potential=id_potential, diffusion_coefficient=diffusion_coef, tip_radius=tip_radius, goofy_format=goofy_format, plotting=plotting)
+            h, q, tq = get_kinetics2(data_subset=data_subset, plotting=plotting)
 
 
-            half_potential_list.append(ehalf)
-            rate_constant_list.append(rate_constant)
-            transfer_coef_list.append(transfer_coef)
-            transfer_coef_error_list.append(transfer_coef_error)
-            kappa_naught_list.append(kappa_naught)
-            kappa_naught_error_list.append(kappa_naught_error)
+            quarter_potential.append(q)
+            half_potential.append(h)
+            three_quarter_potential.append(tq)
+            delta_quarters.append(q-tq)
+
+
         else:
             print('skip')
 
 
-    kinetics_df['Half Potential (V)'] = half_potential_list
-    kinetics_df['Rate Constant (cm/s)'] = rate_constant_list
-    kinetics_df['log10 Rate Constant'] = np.log10(rate_constant_list)
-    kinetics_df['Transfer Coefficient'] = transfer_coef_list
-    kinetics_df['Transfer Coefficient Error'] = transfer_coef_error_list
-    kinetics_df['KappaNaught'] = kappa_naught_list
-    kinetics_df['KappaNaught Error'] = kappa_naught_error_list
+    # kinetics_df['Half Potential (V)'] = half_potential_list
+    # kinetics_df['Rate Constant (cm/s)'] = rate_constant_list
+    # kinetics_df['log10 Rate Constant'] = np.log10(rate_constant_list)
+    # kinetics_df['Transfer Coefficient'] = transfer_coef_list
+    # kinetics_df['Transfer Coefficient Error'] = transfer_coef_error_list
+    # kinetics_df['KappaNaught'] = kappa_naught_list
+    # kinetics_df['KappaNaught Error'] = kappa_naught_error_list
+    kinetics_df['E1/4 (V)'] = quarter_potential
+    kinetics_df['E1/2 (V)'] = half_potential
+    kinetics_df['E3/4 (V)'] = three_quarter_potential
+    kinetics_df['dE1/4_3/4'] = delta_quarters
     kinetics_df['X (um)'] = x_list
     kinetics_df['Y (um)'] = y_list
     
@@ -146,6 +163,18 @@ def precalc_plot(data, data_subset, ylim1, ylim2):
 
 
     plt.show()
+
+
+def background_zero(current_data):
+    minimum_current = np.min(current_data)
+    zeroed_current = current_data - minimum_current
+    return zeroed_current
+
+
+def current_cleanup(current_data):
+    sav_gol = signal.savgol_filter(current_data, 10, 3)
+    cleaned_current = ndimage.gaussian_filter1d(sav_gol, 15)
+    return cleaned_current
 
 
 def save_settings(save_dir, settings_name, directory, linear_region, formal_potential, id_potential, diffusion_coef, tip_radius, potential_range, sweep_number):

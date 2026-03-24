@@ -14,7 +14,7 @@ def main():
     eo = 0.1
     e = np.linspace(-0.25, 0.6, 100)
     e = e - eo
-    ko = 0.003
+    ko = 0.2
     transfer_coef = 0.4
     val = sigmoid_maker(do, dr, n, e, ko, transfer_coef)
     fig, ax = plt.subplots()
