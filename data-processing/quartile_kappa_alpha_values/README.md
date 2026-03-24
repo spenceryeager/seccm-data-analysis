@@ -1,0 +1,3 @@
+# Quartile KappaNaught and Alpha Values
+
+This is from the Oldham-Zoski paper on using quartiles to determine the kinetics of a sigmoid voltammogram. These three separate files are calculated from oldham_zoski_quartiles.py, and can be loaded & cross referenced to find a kinetics values. I'm leaving the option to increase the resolution of the calculations by changing the intervals of alpha & kappa naught. 

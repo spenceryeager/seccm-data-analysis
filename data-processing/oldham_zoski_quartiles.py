@@ -4,43 +4,111 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os
 import scipy as sp
 from scipy.optimize import fsolve
 from scipy import constants
 
 
 def main():
-    # single value calculation
-    q = 0.25
-    alpha = 0
-    knaught = 20
-    # equart(q, h[0])
-    h = fsolve(func=lambda h: solve_h(h, knaught, alpha, q), x0=1)
-    print(h)
-    should_be_zero = np.round(solve_h(h, knaught, alpha, q),0)
-    print(should_be_zero)
-    eqmeo = equart(q, h[0])
-    print(eqmeo * 1000)
+    save_filepath = r"C:\Users\Spencer\Documents\seccm-data-analysis\data-processing\quartile_kappa_alpha_values"
+    save_name = r'quartile_vals_unabridged'
 
-    # batch calculation, initial dataframe
-    q_diff = pd.DataFrame(columns=['i 1/4', 'i 3/4', 'Alpha', 'KappaNaught', 'solved h', 'fsolve check (should be zero)', "abs(E1/4 - E3/4) (mV)"])
+
+    # single value calculation
+    # q = 0.25
+    # alpha = 0
+    # knaught = 20
+    # # equart(q, h[0])
+    # h = fsolve(func=lambda h: solve_h(h, knaught, alpha, q), x0=1)
+    # print(h)
+    # should_be_zero = np.round(solve_h(h, knaught, alpha, q),0)
+    # print(should_be_zero)
+    # eqmeo = equart(q, h[0])
+    # print(eqmeo * 1000)
+
+    # batch calculation, this dataframe will contain all the values.
+    q_diff = pd.DataFrame(columns=['Quart 1/4', 'Quart 1/2', 'Quart 3/4', 'Alpha', 'KappaNaught', '1/4 solved h', '1/4 fsolve check (should be zero)','1/2 solved h', '1/2 fsolve check', '3/4 solved h', '3/4 fsolve check', 'dE 1/4 (mV)', 'dE 3/4 (mV)', 'dE 1/2 (mV)', "E1/4 - E 3/4 (mV)"])
     i14 = [] # q value 1/4
+    i12 = []
     i34 = [] # q value 3/4
-    a = [] # transfer coefficient
+    a_list = [] # transfer coefficient
     kap = [] # kappa naught from the paper
-    solved_h = [] # the fsolve derived value of h
-    check_val = [] # fsolve check value, should be zero
+    solved_h_14 = [] # the fsolve derived value of h for q=0.25
+    solved_h_12 = [] # ^^^^^ for q = 0.5
+    solved_h_34 = [] # ^^^^^ for q = 0.75
+    check_val_14 = [] # fsolve check value, should be zero, for q=0.25
+    check_val_12 = [] # ^^^^ for q = 0.5
+    check_val_34 = [] # ^^^ for q = 0.75 
+    e_14 = []
+    e_12 = []
+    e_34 = []
     dq = [] # the delta of the quartiles
 
-    q = [0.25, 0.75]
+    q = [0.25, 0.5, 0.75]
     alpha = np.linspace(0, 1, 101)
     knaught = np.linspace(0.2, 20, 201)
     
     for quartile in q:
+
         for a in alpha:
+
             for k in knaught:
 
+                if quartile == 0.25:
+                    h = fsolve(func=lambda h: solve_h(h, k, a, quartile), x0=5)
+                    should_be_zero = np.round(solve_h(h, k, a, quartile),0)
+                    eqmeo = 1000 * (equart(quartile, h[0]))
+                    i14.append(quartile)
+                    a_list.append(a)
+                    kap.append(k)
+                    solved_h_14.append(h[0])
+                    check_val_14.append(should_be_zero[0])
+                    e_14.append(eqmeo)
+                    # print(quartile)
+                    # print(a)
+                
+                elif quartile == 0.5:
+                    h = fsolve(func=lambda h: solve_h(h, k, a, quartile), x0=5)
+                    should_be_zero = np.round(solve_h(h, k, a, quartile),0)
+                    eqmeo = 1000 * (equart(quartile, h[0]))
+                    i12.append(quartile)
+                    solved_h_12.append(h[0])
+                    check_val_12.append(should_be_zero[0])
+                    e_12.append(eqmeo)
+                    # print(quartile)
 
+                elif quartile == 0.75:
+                    h = fsolve(func=lambda h: solve_h(h, k, a, quartile), x0=5)
+                    should_be_zero = np.round(solve_h(h, k, a, quartile),0)
+                    eqmeo = 1000 * (equart(quartile, h[0]))
+                    i34.append(quartile)
+                    solved_h_34.append(h[0])
+                    check_val_34.append(should_be_zero[0])
+                    e_34.append(eqmeo)
+
+                else: 
+                    print('Something went wrong')
+                                      
+
+    delta_vals = np.abs(np.subtract(e_14, e_34))
+
+    q_diff['Quart 1/4'] = i14
+    q_diff['Quart 1/2'] = i12
+    q_diff['Quart 3/4'] = i34
+    q_diff['Alpha'] = a_list
+    q_diff['KappaNaught'] = kap
+    q_diff['1/4 solved h'] = solved_h_14
+    q_diff['1/2 solved h'] = solved_h_12
+    q_diff['3/4 solved h'] = solved_h_34
+    q_diff['1/4 fsolve check (should be zero)'] = check_val_14
+    q_diff['1/2 fsolve check'] = check_val_12
+    q_diff['3/4 fsolve check'] = check_val_34
+    q_diff['dE 1/4 (mV)'] = e_14
+    q_diff['dE 1/2 (mV)'] = np.abs(e_12)
+    q_diff['dE 3/4 (mV)'] = e_34
+    q_diff['E1/4 - E 3/4 (mV)'] = delta_vals
+    q_diff.to_csv(os.path.join(save_filepath, (save_name + '.csv')))
 
 
 
