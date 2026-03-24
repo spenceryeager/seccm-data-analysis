@@ -10,12 +10,10 @@ from scipy import constants
 
 
 def main():
-    # q = [0.25, 0.5, 0.75]
-    # alpha = np.linspace(0, 1, 101)
-    # knaught = np.linspace(0.2, 20, 201)
-    q = 0.5
-    alpha = 0.5
-    knaught = 1.58
+    # single value calculation
+    q = 0.25
+    alpha = 0
+    knaught = 20
     # equart(q, h[0])
     h = fsolve(func=lambda h: solve_h(h, knaught, alpha, q), x0=1)
     print(h)
@@ -23,6 +21,26 @@ def main():
     print(should_be_zero)
     eqmeo = equart(q, h[0])
     print(eqmeo * 1000)
+
+    # batch calculation, initial dataframe
+    q_diff = pd.DataFrame(columns=['i 1/4', 'i 3/4', 'Alpha', 'KappaNaught', 'solved h', 'fsolve check (should be zero)', "abs(E1/4 - E3/4) (mV)"])
+    i14 = [] # q value 1/4
+    i34 = [] # q value 3/4
+    a = [] # transfer coefficient
+    kap = [] # kappa naught from the paper
+    solved_h = [] # the fsolve derived value of h
+    check_val = [] # fsolve check value, should be zero
+    dq = [] # the delta of the quartiles
+
+    q = [0.25, 0.75]
+    alpha = np.linspace(0, 1, 101)
+    knaught = np.linspace(0.2, 20, 201)
+    
+    for quartile in q:
+        for a in alpha:
+            for k in knaught:
+
+
 
 
 
