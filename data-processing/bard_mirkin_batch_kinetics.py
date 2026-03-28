@@ -15,17 +15,17 @@ import os
 
 
 def main():
-    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan"
+    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\24Mar2023_P3HT-with-Fc\scan"
     save_dir = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin"
-    save_name = 'pbttt_results.csv'
-    settings_name = "settings.txt"
+    save_name = 'p3ht_results_final'
+    settings_name = save_name + "_settings.txt"
     filelist = file_sort(directory)
     linear_region = [0.05, 0.07] # Defining start and end of linear region for background correction
-    formal_potential = 0.4 # V, formal redox potential of probe
+    formal_potential = 0.367 # V, formal redox potential of probe from pt 
     id_potential = 0.1 # V, potential where diffusion-limited current is observed
     diffusion_coef = 4.1 * (10 ** -6) # cm2/s
     tip_radius = 2.7 * (10 **-5) #cm
-    potential_range = [0.6, 0.25] # V!
+    potential_range = [0.55, 0.25] # V!
     sweep_number = 1
     sweeps = 3
     goofy_format = False # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
@@ -48,7 +48,7 @@ def main():
     x_list = []
     y_list = []
 
-    kinetics_df = pd.DataFrame(columns=['E1/4 (V)', 'E1/2 (V)', 'E3/4 (V)', 'dE1/4_3/4'])
+    kinetics_df = pd.DataFrame(columns=['E1/4 (V)', 'E1/2 (V)', 'E3/4 (V)', 'dE1/2_E0', 'dE1/4_3/4'])
     
     for filename in filelist:
 
@@ -100,14 +100,17 @@ def main():
     # kinetics_df['Transfer Coefficient Error'] = transfer_coef_error_list
     # kinetics_df['KappaNaught'] = kappa_naught_list
     # kinetics_df['KappaNaught Error'] = kappa_naught_error_list
+    delta_half = np.abs(np.subtract(half_potential, formal_potential))
+
     kinetics_df['E1/4 (V)'] = quarter_potential
     kinetics_df['E1/2 (V)'] = half_potential
     kinetics_df['E3/4 (V)'] = three_quarter_potential
+    kinetics_df['dE1/2_E0'] = delta_half
     kinetics_df['dE1/4_3/4'] = delta_quarters
     kinetics_df['X (um)'] = x_list
     kinetics_df['Y (um)'] = y_list
     
-    kinetics_df.to_csv(os.path.join(save_dir, save_name))
+    kinetics_df.to_csv(os.path.join(save_dir, (save_name + ".csv")))
 
 
 def file_sort(dir_path):
