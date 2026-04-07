@@ -15,12 +15,12 @@ def main():
     do = 4.1 * (10 ** -6) # cm2 / s
     radius = 2.7 * (10 **-5) #cm
 
-    data_analysis_file = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin\P3HT\p3ht_results_final.csv"
+    data_analysis_file = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin\PBTTT\pbttt_results_final.csv"
     data_analysis_file = pd.read_csv(data_analysis_file)
-    data_save_directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin\P3HT"
-    data_save_name = r"P3HT_final_kinetics"
+    data_save_directory = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\worked-up-data\SECCM_Kinetics\Bard-Mirkin\PBTTT"
+    data_save_name = r"PBTTT_final_kinetics_06April2026"
 
-    quartile_file = r'data-processing\quartile_kappa_alpha_values\quartile_values_unabridged_cleaned.csv' # relative to where this is being run
+    quartile_file = r'D:\Code\seccm-data-analysis\data-processing\quartile_kappa_alpha_values\quartile_values_large_unabridged_cleaned.csv' # relative to where this is being run
     quartile_processing_loading = pd.read_csv(quartile_file)
 
     alpha_list = []

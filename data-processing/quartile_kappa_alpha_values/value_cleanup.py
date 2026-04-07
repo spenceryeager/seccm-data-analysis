@@ -5,10 +5,10 @@ import os
 
 
 def main():
-    quartile_file = r"data-processing\quartile_kappa_alpha_values\quartile_vals_unabridged.csv" 
+    quartile_file = r"data-processing\quartile_kappa_alpha_values\quartile_vals_large_unabridged.csv" 
     # path is relative to where I'm running it
     save_file = r'data-processing\quartile_kappa_alpha_values'
-    savename = 'quartile_values_unabridged_cleaned'
+    savename = 'quartile_values_large_unabridged_cleaned'
     quartile_values = pd.read_csv(quartile_file)
     quartile_values = quartile_values.dropna()
 

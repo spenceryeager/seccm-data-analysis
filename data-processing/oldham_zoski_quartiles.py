@@ -11,9 +11,10 @@ from scipy import constants
 
 
 def main():
-    save_filepath = r"C:\Users\Spencer\Documents\seccm-data-analysis\data-processing\quartile_kappa_alpha_values"
-    save_name = r'quartile_vals_unabridged'
-
+    save_filepath = r"data-processing\quartile_kappa_alpha_values"
+    save_name = r'quartile_vals_large_unabridged'
+    alpha_vals = 101
+    kappa_vals = 2001
 
     # single value calculation
     # q = 0.25
@@ -46,12 +47,14 @@ def main():
     dq = [] # the delta of the quartiles
 
     q = [0.25, 0.5, 0.75]
-    alpha = np.linspace(0, 1, 101)
-    knaught = np.linspace(0.2, 20, 201)
+    alpha = np.linspace(0, 1, alpha_vals)
+    knaught = np.linspace(0.2, 20, kappa_vals)
     
     for quartile in q:
+        print('Working in quartile ', q)
 
         for a in alpha:
+            print('Solving for alpha ', a)
 
             for k in knaught:
 

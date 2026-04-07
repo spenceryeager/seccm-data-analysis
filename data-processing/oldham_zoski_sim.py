@@ -8,15 +8,16 @@ import scipy.constants as constant
 
 def main():
     # constants
-    do = 1 * (9* 10 **-7)
-    dr = 1 * (1 * 10 **-5)
-    n = 1
-    eo = 0.1
-    e = np.linspace(-0.25, 0.6, 100)
-    e = e - eo
-    ko = 0.2
-    transfer_coef = 0.4
-    val = sigmoid_maker(do, dr, n, e, ko, transfer_coef)
+    do = 4.1 * (10 ** -6) # cm2 / s, diffusion coefficient
+    dr = do # we assume the diffusion of the redox probe is the same in the oxidized and reduced state
+    n = 1 # number of electrons transfered
+    a = 2.7 * (10 **-5) # radius of tip, in cm 
+    eo = 0.2 # formal potential
+    e = np.linspace(-0.25, 0.6, 100) # potential range
+    # e = e - eo
+    ko = 0.02 # actual rate coefficient, in cm / s
+    transfer_coef = 0.4 # transfer coefficient
+    val = sigmoid_maker(do, dr, n, a, e, eo, ko, transfer_coef)
     fig, ax = plt.subplots()
     ax.plot(e, val)
     ax.set_xlabel("Overpotential (V)")
@@ -25,9 +26,10 @@ def main():
     plt.show()
 
 
-def sigmoid_maker(do, dr, n, e, ko, transfer_coef):
-    theta = theta_calc(do, dr, n, e)
-    kappa = kappa_calc(ko, transfer_coef, n, e)
+def sigmoid_maker(do, dr, n, a, e, eo, ko, transfer_coef):
+    kappanaught = rate_to_kap(ko=ko, do=do, a=a)
+    theta = theta_calc(do, dr, n, e, eo)
+    kappa = kappa_calc(ko, transfer_coef, n, e, eo)
     val = current_potential_relation(theta, kappa)
     return val
 
@@ -43,19 +45,28 @@ def sigmoid_maker_curvefit(e, ko, transfer_coef):
 
     
 
-def theta_calc(do, dr, n, e):
+def theta_calc(do, dr, n, e, eo):
     temp = 298
     F = constant.physical_constants['Faraday constant'][0]
-    exponential = np.exp((n * F * (e)) / (temp * constant.R))
+    exponential = np.exp(np.negative(n * F * (e - eo)) / (temp * constant.R)) # for oxidation
+    # exponential = np.exp((n * F * (e - eo)) / (temp * constant.R)) # test val
     theta_val = 1 + (do/dr) * exponential
     return(theta_val)
 
 
-def kappa_calc(ko, transfer_coef, n, e):
+def kappa_calc(kappanaught, transfer_coef, n, e, eo):
     temp = 298
     F = constant.physical_constants['Faraday constant'][0]
-    kappa_val = ko * np.exp(((- n) * transfer_coef * F * (e)) / (temp * constant.R))
+    # kappa_val = kappanaught * np.exp(np.negative((n) * (transfer_coef) * F * (e - eo)) / (temp * constant.R)) # This is for reduction
+    kappa_val = kappanaught * np.exp(((n) * (1-transfer_coef) * F * (e - eo)) / (temp * constant.R)) # This is for oxidation
+
     return(kappa_val)
+
+
+def rate_to_kap(ko, do, a):
+    kappanaught = (np.pi * ko * a) / (4*do)
+    print(kappanaught)
+    return kappanaught
 
 
 def current_potential_relation(theta, kappa):
