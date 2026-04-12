@@ -1,0 +1,3 @@
+# Sigmoid Simulation Values
+
+These values come from simulating a voltammogram using the equations outlined in oldham_zoski_sim.py. Various various of kappa naught and alpha were chosen for simulation, along with their corresponding E1/2, E1/4, and E3/4 values. From this, experimental voltammograms can have the same parameters extracted and matched to a corresponding alpha and kappanaught value. Tables for oxidation and reduction will be compiled to look through. 
