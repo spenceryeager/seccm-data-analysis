@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as constant
+import pandas as pd
 
 
 def main():
@@ -13,15 +14,47 @@ def main():
     n = 1 # number of electrons transfered
     a = 2.7 * (10 **-5) # radius of tip, in cm 
     eo = 0 # formal potential
-    e = np.linspace(-1, 1, 1000) # potential range
+    e = np.linspace(-2, 2, 1000) # potential range
     # e = e - eo
     # ko = 0.2 # actual rate coefficient, in cm / s
-    kappanaught = 20
+    kappanaught = 0.125
     transfer_coef = 0.4 # transfer coefficient
-    reduction = False # are we looking at a reduction process or an oxidation process?
+    reduction = True # are we looking at a reduction process or an oxidation process?
     val = sigmoid_maker(do, dr, n, a, e, eo, kappanaught, transfer_coef, reduction)
+    voltammogram = pd.DataFrame(columns=['Potential (V)', "Normalized Current"])
+    voltammogram['Potential (V)'] = e
+    voltammogram['Normalized Current'] = val
+    
+    
+    if reduction:
+        one_quart = voltammogram.loc[(voltammogram['Normalized Current'] - 0.25).abs().argsort()[0]]
+        one_half = voltammogram.loc[(voltammogram['Normalized Current'] - 0.5).abs().argsort()[0]]
+        three_quart = voltammogram.loc[(voltammogram['Normalized Current'] - 0.75).abs().argsort()[0]]
+
+
+    else:
+        # one_quart = voltammogram.loc[np.round(voltammogram['Normalized Current'], 2) == -0.25].median()
+        one_quart = voltammogram.loc[(voltammogram['Normalized Current'] - -0.25).abs().argsort()[0]]
+        one_half = voltammogram.loc[(voltammogram['Normalized Current'] - -0.5).abs().argsort()[0]]
+        three_quart = voltammogram.loc[(voltammogram['Normalized Current'] - -0.75).abs().argsort()[0]]
+
+    delta_quart_text = np.round((one_quart['Potential (V)'] - three_quart['Potential (V)']), 3) * 1000
+    delta_half = np.round((eo - one_half['Potential (V)']), 3) * 1000
+
     fig, ax = plt.subplots()
-    ax.plot(e, val)
+    ax.plot(voltammogram['Potential (V)'], voltammogram['Normalized Current'])
+    ax.vlines(x = one_quart['Potential (V)'], ymin=0, ymax=1, color='red', alpha=0.25, label = "1/4 Current")
+    ax.vlines(x = one_half['Potential (V)'], ymin=0, ymax=1, color='black', alpha=0.25, label = '1/2 Current')
+    ax.vlines(x = three_quart['Potential (V)'], ymin=0, ymax=1, color='blue', alpha=0.25, label= '3/4 Current')
+
+    ax.annotate(('E$_{1/4}$ - E$_{3/4} =$' + str(delta_quart_text) + " mV"), xy=(0.05, 0.95), xycoords='axes fraction')
+    ax.annotate(('E$_{0}$ - E$_{1/2} =$' + str(delta_half) + " mV"), xy=(0.05, 0.90), xycoords='axes fraction')
+    ax.annotate(('$\\alpha =$' + str(transfer_coef)), xy=(0.05, 0.85), xycoords='axes fraction')
+    ax.annotate(('$\kappa_{0} =$' + str(kappanaught)), xy=(0.05, 0.80), xycoords='axes fraction')
+    ax.annotate(('log10($\kappa_{0}$) =' + str(np.round(np.log10(kappanaught), 2))), xy=(0.05, 0.75), xycoords='axes fraction')
+
+
+
     ax.set_xlabel("Overpotential (V)")
     ax.set_ylabel("Normalized Current")
     ax.set_xlim(-0.2, 0.4)

@@ -2,23 +2,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as constant
 import pandas as pd
+import os
 from oldham_zoski_sim import sigmoid_maker
 
 def main():
-    # Test
+    file_path = r'data-processing\sigmoid_simulation_values'
+    file_name = 'reduction'
     do = 4.1 * (10 ** -6) # cm2 / s, diffusion coefficient
     dr = do # we assume the diffusion of the redox probe is the same in the oxidized and reduced state
     n = 1 # number of electrons transfered
     a = 2.7 * (10 **-5) # radius of tip, in cm # This is NOT USED! 
     eo = 0.5 # formal potential
-    e = np.linspace(-1, 1, 10000) # potential range
+    e = np.linspace(-2, 2, 10000) # potential range
     # e = e - eo
     # kappanaught_list = [5]
     # alpha_list = [0.5] # transfer coefficient
-    kappanaught_list = np.linspace(2,20,2)
-    alpha_list = np.linspace(0,1,5)
-    reduction = False # are we looking at a reduction process or an oxidation process?
-    visualize_and_print = True
+    kappanaught_list = np.linspace(0.2,20,1001)
+    alpha_list = np.linspace(0,1,101)
+    reduction = True # are we looking at a reduction process or an oxidation process?
+    visualize_and_print = False
+    # visualize_and_print = True
 
     value_df = pd.DataFrame(columns=['dE1/4 - dE3/4 (mV)', "dEo - dE1/2 (mV)", "Transfer Coefficient", "KappaNaught"])
     delta_quartile = []
@@ -29,9 +32,9 @@ def main():
 
 
 
-    for kappanaught in kappanaught_list:
+    for transfer_coef in alpha_list:
 
-        for transfer_coef in alpha_list:
+        for kappanaught in kappanaught_list:
 
             val = sigmoid_maker(do, dr, n, a, e, eo, kappanaught, transfer_coef, reduction)
             voltammogram = pd.DataFrame(columns=['Potential (V)', 'Normalized Current'])
@@ -40,30 +43,32 @@ def main():
 
 
             if reduction:
-                one_quart = voltammogram.loc[(voltammogram['Normalized Current'] - 0.25).abs().argsort()[0]]
-                one_half = voltammogram.loc[(voltammogram['Normalized Current'] - 0.5).abs().argsort()[0]]
-                three_quart = voltammogram.loc[(voltammogram['Normalized Current'] - 0.75).abs().argsort()[0]]
+                one_quart = voltammogram.loc[(voltammogram['Normalized Current'] - 0.25).abs().argsort()].mean()
+                one_half = voltammogram.loc[(voltammogram['Normalized Current'] - 0.5).abs().argsort()].mean()
+                three_quart = voltammogram.loc[(voltammogram['Normalized Current'] - 0.75).abs().argsort()].mean()
 
 
             else:
-                # one_quart = voltammogram.loc[np.round(voltammogram['Normalized Current'], 2) == -0.25].median()
-                one_quart = voltammogram.loc[(voltammogram['Normalized Current'] - -0.25).abs().argsort()[0]]
-                one_half = voltammogram.loc[(voltammogram['Normalized Current'] - -0.5).abs().argsort()[0]]
-                three_quart = voltammogram.loc[(voltammogram['Normalized Current'] - -0.75).abs().argsort()[0]]
+                one_quart = voltammogram.loc[(voltammogram['Normalized Current'] - -0.25).abs().argsort()].mean()
+                one_half = voltammogram.loc[(voltammogram['Normalized Current'] - -0.5).abs().argsort()].mean()
+                three_quart = voltammogram.loc[(voltammogram['Normalized Current'] - -0.75).abs().argsort()].mean()
 
             
             # List Appending
-            if (np.abs(one_quart['Potential (V)'] - three_quart['Potential (V)']) * 1000) < 400:
+            comparison_one = (np.abs(one_quart['Potential (V)'] - three_quart['Potential (V)']) * 1000) < 300
+            comparison_two = (np.abs(eo - one_half['Potential (V)']) * 1000) < 500
+
+            if comparison_one and comparison_two:
                 delta_quartile.append(np.abs(one_quart['Potential (V)'] - three_quart['Potential (V)']) * 1000)
-                delta_half.append(np.abs(np.abs(eo - one_half['Potential (V)']) * 1000))
+                delta_half.append((np.abs(eo - one_half['Potential (V)']) * 1000))
                 alpha.append(transfer_coef)
                 kn_list.append(kappanaught)
             
             else:
                 delta_quartile.append(np.nan)
                 delta_half.append(np.nan)
-                alpha.append(np.nan)
-                kn_list.append(np.nan)
+                alpha.append(transfer_coef)
+                kn_list.append(kappanaught)
 
                 
             # Visualization and Printing Values
@@ -83,7 +88,8 @@ def main():
     value_df['KappaNaught'] = kn_list
 
     print(value_df.head())
-
+    value_df.to_csv(os.path.join(file_path, (file_name + "_quartile_values_with_nan.csv")), index=False)
+    value_df.dropna().to_csv(os.path.join(file_path, (file_name + "_quartile_values_no_nan.csv")), index=False)
 
 def visualize(voltammogram, one_quart, one_half, three_quart, reduction):
     fig, ax = plt.subplots()
