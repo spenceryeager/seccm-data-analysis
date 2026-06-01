@@ -17,9 +17,9 @@ def main():
     e = np.linspace(-2, 2, 1000) # potential range
     # e = e - eo
     # ko = 0.2 # actual rate coefficient, in cm / s
-    kappanaught = 0.125
-    transfer_coef = 0.4 # transfer coefficient
-    reduction = True # are we looking at a reduction process or an oxidation process?
+    kappanaught = 16
+    transfer_coef = 0.5 # transfer coefficient
+    reduction = False # are we looking at a reduction process or an oxidation process?
     val = sigmoid_maker(do, dr, n, a, e, eo, kappanaught, transfer_coef, reduction)
     voltammogram = pd.DataFrame(columns=['Potential (V)', "Normalized Current"])
     voltammogram['Potential (V)'] = e
@@ -42,10 +42,23 @@ def main():
     delta_half = np.round((eo - one_half['Potential (V)']), 3) * 1000
 
     fig, ax = plt.subplots()
+
     ax.plot(voltammogram['Potential (V)'], voltammogram['Normalized Current'])
-    ax.vlines(x = one_quart['Potential (V)'], ymin=0, ymax=1, color='red', alpha=0.25, label = "1/4 Current")
-    ax.vlines(x = one_half['Potential (V)'], ymin=0, ymax=1, color='black', alpha=0.25, label = '1/2 Current')
-    ax.vlines(x = three_quart['Potential (V)'], ymin=0, ymax=1, color='blue', alpha=0.25, label= '3/4 Current')
+    if reduction:
+        ax.vlines(x = one_quart['Potential (V)'], ymin=0, ymax=1, color='red', alpha=0.25, label = "1/4 Current")
+        ax.vlines(x = one_half['Potential (V)'], ymin=0, ymax=1, color='black', alpha=0.25, label = '1/2 Current')
+        ax.vlines(x = three_quart['Potential (V)'], ymin=0, ymax=1, color='blue', alpha=0.25, label= '3/4 Current')
+
+
+    else:
+        # one_quart = voltammogram.loc[np.round(voltammogram['Normalized Current'], 2) == -0.25].median()
+        ax.vlines(x = one_quart['Potential (V)'], ymin=-1, ymax=0, color='red', alpha=0.25, label = "1/4 Current")
+        ax.vlines(x = one_half['Potential (V)'], ymin=-1, ymax=0, color='black', alpha=0.25, label = '1/2 Current')
+        ax.vlines(x = three_quart['Potential (V)'], ymin=-1, ymax=0, color='blue', alpha=0.25, label= '3/4 Current')
+
+    # ax.vlines(x = one_quart['Potential (V)'], ymin=0, ymax=1, color='red', alpha=0.25, label = "1/4 Current")
+    # ax.vlines(x = one_half['Potential (V)'], ymin=0, ymax=1, color='black', alpha=0.25, label = '1/2 Current')
+    # ax.vlines(x = three_quart['Potential (V)'], ymin=0, ymax=1, color='blue', alpha=0.25, label= '3/4 Current')
 
     ax.annotate(('E$_{1/4}$ - E$_{3/4} =$' + str(delta_quart_text) + " mV"), xy=(0.05, 0.95), xycoords='axes fraction')
     ax.annotate(('E$_{0}$ - E$_{1/2} =$' + str(delta_half) + " mV"), xy=(0.05, 0.90), xycoords='axes fraction')
@@ -57,8 +70,9 @@ def main():
 
     ax.set_xlabel("Overpotential (V)")
     ax.set_ylabel("Normalized Current")
-    ax.set_xlim(-0.2, 0.4)
+    ax.set_xlim(-0.3, 0.3)
     ax.invert_xaxis()
+    ax.set_box_aspect(1)
     plt.show()
 
 
