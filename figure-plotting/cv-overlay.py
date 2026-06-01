@@ -20,10 +20,25 @@ rcParams['savefig.dpi'] = 300
 
 
 def main():
-    make_plot()
+    ##############################
+    #change these parameters #####
+    ##############################
+    directory = r"E:\SECCMComputerBackup\CDrive\Data\Ratul\30May2026_polymer_blends\p3ht_75_hpeo_25_large_scan\scan3"
+    savefig_directory = r"enter directory to save figure"
+    savefig_name = "save_fig_name"
+    sweep_numbers = 2 # currently does not do anything
+    fc_calibration = 0 # only use this if you want to calibrate X axis to a redox probe
+    fc_ev = -4.9
+    reference = "Potential (V) vs Ag Wire" # this will be the X axis in the plot
+    ev_axis = False # currently does not do anything
+    save = True
+    us_convention = True
+    color = "#e31a1c"
+    ##############################
+    make_plot(directory, savefig_name, savefig_directory, sweep_numbers, fc_calibration, fc_ev, reference, ev_axis, save, us_convention, color)
 
 
-def make_plot():
+def make_plot(directory, savefig_name, savefig_directory, sweep_numbers, fc_calibration, fc_ev, reference, ev_axis, save, us_convention, color):
     
     
     def current_cleanup(current_data):
@@ -44,21 +59,6 @@ def make_plot():
         # then converted to an int.
         return sorted_file_list
 
-
-    ##############################
-    # some parameters to change
-    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper3_pbttt_annealing_kinetics\data\SECCM\05Feb2025_Terrace\scan"
-    savefig_directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper3_pbttt_annealing_kinetics\figures\PublicationFigures\SECCM"
-    savefig_name = "nanoribbon_Fc_overlay.png"
-    sweep_numbers = 2
-    fc_calibration = 0
-    fc_ev = -4.9
-    reference = "Potential (V) vs Ag Wire"
-    ev_axis = False
-    save = True
-    color = "#e31a1c"
-    ##############################
-
     # File stuff
     # file_list = os.listdir(directory)
     file_list = file_sort(directory)
@@ -75,33 +75,42 @@ def make_plot():
     mpl.rcParams.update({'font.size': fontsize, 'figure.autolayout': True})
     fig, ax = plt.subplots(figsize=(14,10), tight_layout=True)
     cv_count = 0
-    
 
-    for file in file_list[250:400]:
+
+    # Creating a color gradient to help distinguish where certain CVs
+    cmap_viri = plt.get_cmap('viridis')(np.linspace(0,1,len(file_list)))
+    alpha = 1
+    color_count = 0
+
+    for file in file_list:
 
 
         if file.endswith('.csv'):
             cv_count += 1
             data = pd.read_csv(os.path.join(directory, file), sep='\t') # loading in data
-            second_sweep = int(len(data) / sweep_numbers) # getting length of data file to remove first sweep
+
             smoothed_current = current_cleanup(data[i])
             # ax.plot(np.negative(data[v][second_sweep:] - fc_calibration), data[i][second_sweep:], color=color, alpha=0.05)
-            ax.plot(np.negative(data[v][second_sweep:] - fc_calibration), smoothed_current[second_sweep:], color=color, alpha=0.05, linewidth=3)
+
+            if us_convention:
+                ax.plot(data[v] - fc_calibration, np.negative(smoothed_current), color=cmap_viri[color_count], alpha=alpha, linewidth=3)
+
+            else:
+                ax.plot(data[v]  - fc_calibration, smoothed_current, color=cmap_viri[color_count], alpha=alpha, linewidth=3)
 
 
+            color_count += 1
 
 
-    # Formatting plot
-    ax.invert_xaxis()
+    if us_convention:
+        ax.invert_xaxis()
+    #################################
+    ###### Formatting plot ##########
     ax.minorticks_on()
     ax.set_xlabel(reference)
     ax.set_ylabel("Current (pA)")
-    ax.set_ylim(-60, 20)
+    # ax.set_ylim(-60, 20)
     ax.legend(['n ='+str(cv_count)], handlelength=0, handletextpad=0, frameon=False)
-
-    # ax2 = ax.secondary_xaxis("top", functions=(lambda x: (x-fc_ev)*-1, lambda x: (x+fc_ev)*-1))
-    # ax2.minorticks_on()
-    # ax2.set_xlabel("Energy vs. Vacuum (eV)")
     plt.tight_layout()
     ax.xaxis.labelpad = 5
     ax.yaxis.labelpad = 5
@@ -114,7 +123,13 @@ def make_plot():
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(3) 
 
-    plt.savefig(os.path.join(savefig_directory, savefig_name), dpi=500)
+
+    # plt.savefig(os.path.join(savefig_directory, savefig_name), dpi=500)
+    sm = plt.cm.ScalarMappable(cmap='viridis', norm=plt.Normalize(vmin=1, vmax=len(file_list)))
+    cbar = plt.colorbar(sm, fraction=0.046, pad=0.04)
+    cbar.set_label('CV Number', rotation=270, fontweight='bold', labelpad=40, fontsize=35)
+    cbar.outline.set_linewidth(3)
+    cbar.ax.tick_params(labelsize=35)
     plt.show()
 
 
