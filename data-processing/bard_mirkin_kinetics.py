@@ -19,30 +19,33 @@ from oldham_zoski_sim import sigmoid_maker_curvefit
 
 def main():
     # Fill this section out! Future implementation will have a popup box perhaps.
-    linear_region = [0.26, 0.25] # Defining start and end of linear region for background correction
+    linear_region = [0.1, 0.2] # Defining start and end of linear region for background correction
     formal_potential = 0.31 # V, formal redox potential of probe
-    id_potential = 0.26 # V, potential where diffusion-limited current is observed
+    id_potential = 0.1 # V, potential where diffusion-limited current is observed
     diffusion_coef = 4.1 * (10 ** -6) # cm2/s
     tip_radius = 2.7 * (10 **-5) #cm
-    potential_range = [0.6, 0.25] # V!
+    potential_range = [0.6, 0.1] # V!
     sweep_number = 1
-    sweeps = 3
-    ox_to_red_event = False # Are you trying to 
+    sweeps = 1
+    ox_to_red_event = True # Are you trying to 
     goofy_format = False # This is for when the SECCM is configured to record currents in US convention, thus making the potentials backward. Hopefully will be fixed in a future update of the SECCM software.
     show_precalc_plot = True # This will be used to evaluate what parts of the voltammogram will be used in the kinetics evaluation. 
     plotting = True
     # working parts of code
-    data_path = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\28Mar2023_PBTTT_Fc\scan\0X_0Y_pbttt_fc.csv"
+    data_path = r"G:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\SECCM_Data\02June2026_rrP3HT_Colocation\reference_calibration\reference_before_5.csv"
 
     data = pd.read_csv(data_path, sep='\t')
 
     data = data_cleanup(data, goofy_format) 
     data['Cleaned Current (pA)'] = current_cleanup(data['Fixed Current (pA)'])
     len_data = len(data)
-    cycle_subset = int(len_data / sweeps)
-    data_ox_cycle = int(cycle_subset / 2)
-    data_subset = data[data_ox_cycle : data_ox_cycle*2].reset_index()
-    data_subset = data_subset.loc[data_subset['Voltage (V)'].between(potential_range[1], potential_range[0])]
+
+
+    if ox_to_red_event:
+        cycle_subset = int(len_data / sweeps)
+        data_ox_cycle = int(cycle_subset / 2)
+        data_subset = data[:data_ox_cycle].reset_index()
+        data_subset = data_subset.loc[data_subset['Voltage (V)'].between(potential_range[1], potential_range[0])]
     
     zeroed = background_zero(data_subset['Cleaned Current (pA)'])
     max_current = np.max(zeroed)

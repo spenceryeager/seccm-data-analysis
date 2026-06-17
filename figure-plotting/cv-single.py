@@ -43,9 +43,12 @@ def fit_data():
     mpl.rcParams.update({'font.size': fontsize, 'figure.autolayout': True})
     fig, ax = plt.subplots(figsize=(8,8), tight_layout=True)
     if fit == True:
-        ax.plot(data_read["Voltage (V)"], data_read["Current (pA)"], color='black', alpha=0.2, label="Raw Current", linewidth=7)
+        ax.plot(data_read["Voltage (V)"], data_read["Current (pA)"], color='black', alpha=0.2, label="Raw Current", linewidth=7, zorder=0)
         fitted_current  = current_fit(data_read['Current (pA)'])
-        ax.plot(data_read["Voltage (V)"], fitted_current, color='black', alpha=1, label="Smoothed Current", linewidth=7)
+        ax.plot(data_read["Voltage (V)"], fitted_current, color='black', alpha=1, label="Smoothed Current", linewidth=7, zorder=0)
+        ax.scatter(data_read["Voltage (V)"][0], fitted_current[0], color='red', s=50, label='Beginning', zorder=4)
+        ax.scatter(data_read["Voltage (V)"].iloc[-1], fitted_current[-1], color='green', s=50, label='End', zorder=4)
+
         ax.legend(prop={'size': 16})
     else:
         ax.plot(data_read["Voltage (V)"], data_read["Current (pA)"], color='black', alpha=1, linewidth=7)
