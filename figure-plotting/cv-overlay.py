@@ -23,7 +23,7 @@ def main():
     ##############################
     #change these parameters #####
     ##############################
-    directory = r"E:\SECCMComputerBackup\CDrive\Data\Ratul\30May2026_polymer_blends\p3ht_75_hpeo_25_large_scan\scan3"
+    directory = r"E:\SECCMComputerBackup\CDrive\Data\Spencer\03June2026_rrP3HT_colocation\Fc\scan"
     savefig_directory = r"enter directory to save figure"
     savefig_name = "save_fig_name"
     sweep_numbers = 2 # currently does not do anything
@@ -79,7 +79,7 @@ def make_plot(directory, savefig_name, savefig_directory, sweep_numbers, fc_cali
 
     # Creating a color gradient to help distinguish where certain CVs
     cmap_viri = plt.get_cmap('viridis')(np.linspace(0,1,len(file_list)))
-    alpha = 1
+    alpha = 0.1
     color_count = 0
 
     for file in file_list:
