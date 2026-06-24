@@ -16,8 +16,8 @@ def main():
     path_to_save = r'/run/media/spencer/My Passport/RDrive_Backup/Spencer Yeager/papers/paper4_pbtttt_p3ht_transfer_kinetics/data/SECCM_Data/02June2026_rrP3HT_Colocation/worked-up-data' # save path
     save_name = "disordered_anodic_currents" # name of the file to save
     save = True # do you want to save your dataframe?
-    visualize_only = False # do you only want to visualize to select a potential?
     number_of_scans = 1 # This is the number of FULL scans, i.e. one full cycle.
+    visualize_only = False # do you only want to visualize to select a potential?
     visualize_first = True # this will plot the first file in dir_list
     every_val = False # this is for grabbing every value, both oxidation and reduction sweeps.
     oxidation_vals = True # this will obtain values from the oxidation sweep
