@@ -23,7 +23,7 @@ def main():
     ##############################
     #change these parameters #####
     ##############################
-    directory = r"E:\SECCMComputerBackup\CDrive\Data\Spencer\03June2026_rrP3HT_colocation\Fc\scan"
+    directory = r"E:\RDrive_Backup\Spencer Yeager\papers\paper4_pbtttt_p3ht_transfer_kinetics\data\SECCM_Data\06June2025_PlatinumDisk_CVs\scan"
     savefig_directory = r"enter directory to save figure"
     savefig_name = "save_fig_name"
     sweep_numbers = 2 # currently does not do anything
@@ -31,7 +31,7 @@ def main():
     fc_ev = -4.9
     reference = "Potential (V) vs Ag Wire" # this will be the X axis in the plot
     ev_axis = False # currently does not do anything
-    save = True
+    save = False
     us_convention = True
     color = "#e31a1c"
     ##############################
@@ -126,7 +126,7 @@ def make_plot(directory, savefig_name, savefig_directory, sweep_numbers, fc_cali
 
     # plt.savefig(os.path.join(savefig_directory, savefig_name), dpi=500)
     sm = plt.cm.ScalarMappable(cmap='viridis', norm=plt.Normalize(vmin=1, vmax=len(file_list)))
-    cbar = plt.colorbar(sm, fraction=0.046, pad=0.04)
+    cbar = plt.colorbar(sm, fraction=0.046, pad=0.04, ax=plt.gca())
     cbar.set_label('CV Number', rotation=270, fontweight='bold', labelpad=40, fontsize=35)
     cbar.outline.set_linewidth(3)
     cbar.ax.tick_params(labelsize=35)
