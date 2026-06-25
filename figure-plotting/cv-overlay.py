@@ -93,7 +93,7 @@ def make_plot(directory, savefig_name, savefig_directory, sweep_numbers, fc_cali
             # ax.plot(np.negative(data[v][second_sweep:] - fc_calibration), data[i][second_sweep:], color=color, alpha=0.05)
 
             if us_convention:
-                ax.plot(data[v] - fc_calibration, np.negative(smoothed_current), color=cmap_viri[color_count], alpha=alpha, linewidth=3)
+                ax.plot((data[v] - fc_calibration), np.negative(smoothed_current), color=cmap_viri[color_count], alpha=alpha, linewidth=3)
 
             else:
                 ax.plot(data[v]  - fc_calibration, smoothed_current, color=cmap_viri[color_count], alpha=alpha, linewidth=3)
@@ -126,7 +126,7 @@ def make_plot(directory, savefig_name, savefig_directory, sweep_numbers, fc_cali
 
     # plt.savefig(os.path.join(savefig_directory, savefig_name), dpi=500)
     sm = plt.cm.ScalarMappable(cmap='viridis', norm=plt.Normalize(vmin=1, vmax=len(file_list)))
-    cbar = plt.colorbar(sm, fraction=0.046, pad=0.04, ax=plt.gca())
+    cbar = plt.colorbar(sm, ax=plt.gca())
     cbar.set_label('CV Number', rotation=270, fontweight='bold', labelpad=40, fontsize=35)
     cbar.outline.set_linewidth(3)
     cbar.ax.tick_params(labelsize=35)
